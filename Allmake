@@ -1,0 +1,15 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+
+mkdir bin
+mkdir build
+
+cmake -DCMAKE_PREFIX_PATH:PATH="D:\Works\gPRC-bin" \
+      -DQt5_DIR:PATH="C:\Applications\Qt\Qt5.14.2\5.14.2\msvc2017_64\lib\cmake\Qt5" \
+      -DQt5_BIN_DIR:PATH="C:\Applications\Qt\Qt5.14.2\5.14.2\msvc2017_64\bin" \
+      -DCMAKE_INSTALL_PREFIX:PATH=".\bin" \
+      -S . -B build
+
+cmake --build build --config Release
+
+cmake --install build --config Release
