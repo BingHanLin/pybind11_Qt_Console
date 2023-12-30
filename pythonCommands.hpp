@@ -1,11 +1,12 @@
-#include <pybind11/pybind11.h>
+#pragma once
 
-#include "pythonCommands.hpp"
+#pragma push_macro(                                                            \
+    "slots") // solve slots variable name conflits between python and qt.
+#undef slots
+#include <pybind11/embed.h> // everything needed for embedding
+#pragma pop_macro("slots")
 
-PYBIND11_EMBEDDED_MODULE(example, m) {
-  m.doc() = "pybind11 example plugin"; // optional module docstring
-
-  m.def("add", &add, "A function that adds two numbers");
-
-  m.def("subtract", [](int i, int j) { return i - j; });
+PYBIND11_EMBEDDED_MODULE(fast_calc, m) {
+  pybind11::module_ cal = m.def_submodule("cal", "A submodule of fast_calc'");
+  cal.def("add", [](int i, int j) { return i + j; });
 }
