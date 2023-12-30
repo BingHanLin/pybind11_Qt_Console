@@ -1,0 +1,81 @@
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "MSVC_x64-debug",
+            "displayName": "MSVC_x64-debug",
+            "description": "Using compilers for Visual Studio 16 2019 (x64 architecture)",
+            "generator": "Visual Studio 16 2019",
+            "toolset": "host=x64",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build/debug/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/bin/debug/install/${presetName}",
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe",
+                "Qt5_DIR": {
+                    "type": "PATH",
+                    "value": "C:/Applications/Qt/Qt5.14.2/5.14.2/msvc2017_64/lib/cmake/Qt5"
+                },
+                "Qt5_BIN_DIR": {
+                    "type": "PATH",
+                    "value": "C:/Applications/Qt/Qt5.14.2/5.14.2/msvc2017_64/bin"
+                },
+                "PYTHON_EXECUTABLE": {
+                    "type": "PATH",
+                    "value": "${sourceDir}/pybind11-env/Scripts/python.exe"
+                },
+                "pybind11_DIR": {
+                    "type": "PATH",
+                    "value": "${sourceDir}/extern/pybind11/build/lib/pybind11/share/cmake/pybind11"
+                }
+            }
+        },
+        {
+            "name": "MSVC_x64-release",
+            "displayName": "MSVC_x64-release",
+            "description": "Using compilers for Visual Studio 16 2019 (x64 architecture)",
+            "generator": "Visual Studio 16 2019",
+            "toolset": "host=x64",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build/release/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/bin/release/install/${presetName}",
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe",
+                "Qt5_DIR": {
+                    "type": "PATH",
+                    "value": "C:/Applications/Qt/Qt5.14.2/5.14.2/msvc2017_64/lib/cmake/Qt5"
+                },
+                "Qt5_BIN_DIR": {
+                    "type": "STRING",
+                    "value": "C:/Applications/Qt/Qt5.14.2/5.14.2/msvc2017_64/bin"
+                },
+                "PYTHON_EXECUTABLE": {
+                    "type": "PATH",
+                    "value": "${sourceDir}/pybind11-env/Scripts/python.exe"
+                },
+                "pybind11_DIR": {
+                    "type": "PATH",
+                    "value": "${sourceDir}/extern/pybind11/build/lib/pybind11/share/cmake/pybind11"
+                }
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "MSVC_x64-debug",
+            "displayName": "MSVC_x64-debug",
+            "configurePreset": "MSVC_x64-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "MSVC_x64-release",
+            "displayName": "MSVC_x64-release",
+            "configurePreset": "MSVC_x64-release",
+            "configuration": "Release"
+        }
+    ]
+}
