@@ -13,19 +13,22 @@ find_package(pybind11 REQUIRED)  # or `add_subdirectory(pybind11)`
 
 find_package(Qt5 REQUIRED COMPONENTS Core Network Widgets LinguistTools Gui OpenGL Concurrent)
 
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.cpp" "${PROJECT_SOURCE_DIR}/shonTACommon/*.cpp")
+file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.hpp" "${PROJECT_SOURCE_DIR}/src/*.hpp")
+file(GLOB_RECURSE UI_FILES "${PROJECT_SOURCE_DIR}/src/*.ui")
+
 add_executable(example
-    main.cpp
-    mainWindow.cpp
-    mainWindow.hpp
-    commands.hpp
-    pythonTerminal.cpp
-    pythonTerminal.hpp
-    pythonCommands.hpp
+    ${SRC_FILES}
+    ${HEADER_FILES}
+    ${UI_FILES}
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} 
     PRIVATE 
-        ${PROJECT_SOURCE_DIR}
+        ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/src/commands
+        ${PROJECT_SOURCE_DIR}/src/model
+        ${PROJECT_SOURCE_DIR}/src/pythonTerminal
 )
 
 

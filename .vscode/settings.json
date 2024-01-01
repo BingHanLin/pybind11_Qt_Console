@@ -83,6 +83,7 @@
         "xutility": "cpp",
         "qundocommand": "cpp",
         "qkeyevent": "cpp",
-        "qdockwidget": "cpp"
+        "qdockwidget": "cpp",
+        "fstream": "cpp"
     }
 }
