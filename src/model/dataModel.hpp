@@ -1,6 +1,7 @@
 #pragma once
 
-#include <vector>
+#include <map>
+#include <memory>
 
 #include <QObject>
 
@@ -18,9 +19,13 @@ class dataModel : public QObject
     dataModel();
     ~dataModel();
 
-    void addOrder(const order& o);
+    void addOrder(const std::shared_ptr<order> o);
 
-    std::vector<order> orders() const
+    void removeOrder(const int id);
+
+    void updateOrder(const int id, const int amount, const double price);
+
+    std::map<int, std::shared_ptr<order>> orders() const
     {
         return orders_;
     };
@@ -29,5 +34,5 @@ class dataModel : public QObject
     void dataChanged();
 
    private:
-    std::vector<order> orders_;
+    std::map<int, std::shared_ptr<order>> orders_;
 };

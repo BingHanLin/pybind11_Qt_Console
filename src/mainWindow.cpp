@@ -45,14 +45,14 @@ void mainWindow::onDataChanged()
     table_->setRowCount(orders.size());
 
     int counter = 0;
-    for (const auto& order : orders)
+    for (const auto& [id, order] : orders)
     {
         table_->setItem(counter, 0,
-                        new QTableWidgetItem(QString::number(order.id_)));
+                        new QTableWidgetItem(QString::number(order->id_)));
         table_->setItem(counter, 1,
-                        new QTableWidgetItem(QString::number(order.amount_)));
+                        new QTableWidgetItem(QString::number(order->amount_)));
         table_->setItem(counter, 2,
-                        new QTableWidgetItem(QString::number(order.price_)));
+                        new QTableWidgetItem(QString::number(order->price_)));
 
         counter++;
     }
