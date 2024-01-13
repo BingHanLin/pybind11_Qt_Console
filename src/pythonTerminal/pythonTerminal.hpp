@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QCompleter>
 #include <QKeyEvent>
 #include <QTextEdit>
 #include <QWidget>
@@ -16,7 +17,14 @@ class pythonTerminal : public QTextEdit
 
    protected:
     void keyPressEvent(QKeyEvent *event) override;
+    void focusInEvent(QFocusEvent *e) override;
 
    private:
     std::shared_ptr<pythonInterpreter> interpreter_;
+    QCompleter *completer_;
+
+    QString textUnderCursor() const;
+
+   private slots:
+    void onCompletionActivated(const QString &completion);
 };

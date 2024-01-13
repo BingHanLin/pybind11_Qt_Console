@@ -1,6 +1,9 @@
+#include <iostream>
 
-#include "pythonInterpreter.hpp"
+#include <pybind11/stl.h>
+
 #include "pythonCommands.hpp"
+#include "pythonInterpreter.hpp"
 
 pythonInterpreter::pythonInterpreter(std::shared_ptr<dataModel> model)
 {
@@ -14,6 +17,22 @@ pythonInterpreter::pythonInterpreter(std::shared_ptr<dataModel> model)
 
     auto demo_commands = pybind11::module_::import("demo_commands");
     locals_ = pybind11::dict(**demo_commands.attr("__dict__"));
+
+    for (auto item : locals_)
+    {
+        std::cout << "key: " << item.first << ", value=" << item.second
+                  << std::endl;
+    };
+
+    auto sub_commands =
+        pybind11::module_::import("demo_commands.order_commands");
+    auto sub_locals = pybind11::dict(**sub_commands.attr("__dict__"));
+
+    for (auto item : sub_locals)
+    {
+        std::cout << "  key: " << item.first << ", value=" << item.second
+                  << std::endl;
+    };
 }
 
 pythonInterpreter::~pythonInterpreter()
