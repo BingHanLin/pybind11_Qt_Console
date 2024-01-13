@@ -3,12 +3,7 @@
 #include <QAbstractItemView>
 #include <QKeyEvent>
 #include <QScrollBar>
-
-#pragma push_macro( \
-    "slots")  // solve slots variable name conflits between python and qt.
-#undef slots
-#include <pybind11/embed.h>  // everything needed for embedding
-#pragma pop_macro("slots")
+#include <QStringListModel>
 
 #include "pythonTerminal.hpp"
 
@@ -16,31 +11,16 @@ pythonTerminal::pythonTerminal(std::shared_ptr<pythonInterpreter> interpreter,
                                QWidget *parent)
     : QTextEdit(parent), interpreter_(interpreter), completer_(nullptr)
 {
-    QStringList wordList;
-    wordList << "XiaoTu"
-             << "xiaomi"
-             << "Huawei"
-             << "huafei"
-             << "Shanghai"
-             << "shangshan"
-             << "abc";
-
-    completer_ = new QCompleter(wordList, this);
-    // completer->setCompletionMode(QCompleter::InlineCompletion);
-    // completer->setCaseSensitivity(Qt::CaseSensitive);
-
+    completer_ = new QCompleter(this);
     completer_->setWidget(this);
+    completer_->setCaseSensitivity(Qt::CaseSensitive);
     completer_->setCompletionMode(QCompleter::PopupCompletion);
     completer_->setCaseSensitivity(Qt::CaseInsensitive);
+
+    this->updateCompleter();
+
     connect(completer_, QOverload<const QString &>::of(&QCompleter::activated),
             this, &pythonTerminal::onCompletionActivated);
-}
-
-QString pythonTerminal::textUnderCursor() const
-{
-    QTextCursor tc = this->textCursor();
-    tc.select(QTextCursor::WordUnderCursor);
-    return tc.selectedText();
 }
 
 void pythonTerminal::onCompletionActivated(const QString &completionText)
@@ -79,21 +59,24 @@ void pythonTerminal::keyPressEvent(QKeyEvent *event)
 
     if (event->key() == Qt::Key_Return)
     {
-        const QString text = toPlainText();
+        const QString text = this->toPlainText();
         interpreter_->runCommand(text.toStdString());
         event->accept();
         return;
     }
-    else
+
+    QTextEdit::keyPressEvent(event);
+
+    this->updateCompleter();
+
+    const static QString endOfWord("~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-=");
+
+    const QString eventText = event->text();
+    const QString completionPrefix = this->textUnderCursor();
+
+    const bool hasModifier = (event->modifiers() != Qt::NoModifier);
+
     {
-        QTextEdit::keyPressEvent(event);
-
-        const static QString endOfWord("~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-=");
-
-        const bool hasModifier = (event->modifiers() != Qt::NoModifier);
-        const QString completionPrefix = this->textUnderCursor();
-        const QString eventText = event->text();
-
         if (hasModifier || eventText.isEmpty() ||
             completionPrefix.length() < 3 ||
             endOfWord.contains(eventText.right(1)))
@@ -102,7 +85,9 @@ void pythonTerminal::keyPressEvent(QKeyEvent *event)
             event->accept();
             return;
         }
+    }
 
+    {
         if (completionPrefix != completer_->completionPrefix())
         {
             completer_->setCompletionPrefix(completionPrefix);
@@ -126,4 +111,23 @@ void pythonTerminal::focusInEvent(QFocusEvent *e)
     }
 
     QTextEdit::focusInEvent(e);
+}
+
+QString pythonTerminal::textUnderCursor() const
+{
+    QTextCursor tc = this->textCursor();
+    tc.select(QTextCursor::WordUnderCursor);
+    return tc.selectedText();
+}
+
+void pythonTerminal::updateCompleter()
+{
+    QTextCursor tc = this->textCursor();
+    tc.select(QTextCursor::LineUnderCursor);
+    const auto lineText = tc.selectedText();
+    const auto wordList = lineText.split(".");
+
+    const auto nextWordList = interpreter_->getMethods(wordList);
+    auto model = new QStringListModel(nextWordList, completer_);
+    completer_->setModel(model);
 }

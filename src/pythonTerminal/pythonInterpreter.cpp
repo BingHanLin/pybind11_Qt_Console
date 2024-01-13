@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include <pybind11/stl.h>
 
@@ -17,22 +18,6 @@ pythonInterpreter::pythonInterpreter(std::shared_ptr<dataModel> model)
 
     auto demo_commands = pybind11::module_::import("demo_commands");
     locals_ = pybind11::dict(**demo_commands.attr("__dict__"));
-
-    for (auto item : locals_)
-    {
-        std::cout << "key: " << item.first << ", value=" << item.second
-                  << std::endl;
-    };
-
-    auto sub_commands =
-        pybind11::module_::import("demo_commands.order_commands");
-    auto sub_locals = pybind11::dict(**sub_commands.attr("__dict__"));
-
-    for (auto item : sub_locals)
-    {
-        std::cout << "  key: " << item.first << ", value=" << item.second
-                  << std::endl;
-    };
 }
 
 pythonInterpreter::~pythonInterpreter()
@@ -43,3 +28,50 @@ void pythonInterpreter::runCommand(const std::string& cmd) const
 {
     pybind11::exec(cmd, pybind11::globals(), locals_);
 };
+
+QStringList pythonInterpreter::getMethods(const QStringList& queryList) const
+{
+    QStringList fullQueryMethod({"demo_commands"});
+    fullQueryMethod.append(queryList);
+    fullQueryMethod.removeAll(QString(""));
+
+    QStringList resultMethods;
+    QStringList testQueryMethod;
+    for (const auto oneQueryMethod : fullQueryMethod)
+    {
+        testQueryMethod.push_back(oneQueryMethod);
+        const auto testQueryMethodString = testQueryMethod.join(".");
+
+        try
+        {
+            auto sub_commands = pybind11::module_::import(
+                testQueryMethodString.toStdString().c_str());
+            auto sub_locals = pybind11::dict(**sub_commands.attr("__dict__"));
+
+            resultMethods.clear();
+
+            for (auto item : sub_locals)
+            {
+                std::stringstream ss;
+                ss << item.first;
+                const auto oneMethodName = QString::fromStdString(ss.str());
+
+                if (!oneMethodName.startsWith("__"))
+                {
+                    resultMethods.push_back(oneMethodName);
+                }
+            };
+        }
+        catch (pybind11::error_already_set& e)
+        {
+            if (e.matches(PyExc_ModuleNotFoundError))
+            {
+                std::cout << "PyExc_ModuleNotFoundError" << std::endl;
+            }
+
+            std::cout << e.what() << std::endl;
+        }
+    }
+
+    return resultMethods;
+}

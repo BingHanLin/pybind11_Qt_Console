@@ -24,6 +24,7 @@ class pythonTerminal : public QTextEdit
     QCompleter *completer_;
 
     QString textUnderCursor() const;
+    void updateCompleter();
 
    private slots:
     void onCompletionActivated(const QString &completion);

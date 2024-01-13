@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 
+#include <QStringList>
+
 #pragma push_macro( \
     "slots")  // solve slots variable name conflits between python and qt.
 #undef slots
@@ -18,6 +20,8 @@ class pythonInterpreter
     ~pythonInterpreter();
 
     void runCommand(const std::string& cmd) const;
+
+    QStringList getMethods(const QStringList& queryList) const;
 
    private:
     pybind11::scoped_interpreter interpreterGuard_;
