@@ -125,9 +125,25 @@ void pythonTerminal::updateCompleter()
     QTextCursor tc = this->textCursor();
     tc.select(QTextCursor::LineUnderCursor);
     const auto lineText = tc.selectedText();
-    const auto wordList = lineText.split(".");
+    auto wordStringList = lineText.split(".");
+    wordStringList.removeAll("");
 
-    const auto nextWordList = interpreter_->getMethods(wordList);
-    auto model = new QStringListModel(nextWordList, completer_);
+    std::vector<std::string> stdWordVector;
+    for (const auto &qString : wordStringList)
+    {
+        stdWordVector.push_back(qString.toStdString());
+    }
+
+    const auto stdPossibleWordVector =
+        interpreter_->getPossibleMethods(stdWordVector);
+
+    QStringList possibleWordStringList;
+    for (const auto &stdString : stdPossibleWordVector)
+    {
+        // Convert std::string to QString and append it to the QStringList
+        possibleWordStringList.append(QString::fromStdString(stdString));
+    }
+
+    auto model = new QStringListModel(possibleWordStringList, completer_);
     completer_->setModel(model);
 }

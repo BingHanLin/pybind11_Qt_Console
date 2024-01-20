@@ -21,7 +21,8 @@ class pythonInterpreter
 
     void runCommand(const std::string& cmd) const;
 
-    QStringList getMethods(const QStringList& queryList) const;
+    std::vector<std::string> getPossibleMethods(
+        const std::vector<std::string>& queryVec) const;
 
    private:
     pybind11::scoped_interpreter interpreterGuard_;

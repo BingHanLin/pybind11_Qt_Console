@@ -29,38 +29,53 @@ void pythonInterpreter::runCommand(const std::string& cmd) const
     pybind11::exec(cmd, pybind11::globals(), locals_);
 };
 
-QStringList pythonInterpreter::getMethods(const QStringList& queryList) const
+std::vector<std::string> pythonInterpreter::getPossibleMethods(
+    const std::vector<std::string>& queryVec) const
 {
-    QStringList fullQueryMethod({"demo_commands"});
-    fullQueryMethod.append(queryList);
-    fullQueryMethod.removeAll(QString(""));
+    std::vector<std::string> fullQueryVec{"demo_commands"};
+    fullQueryVec.insert(fullQueryVec.end(), queryVec.begin(), queryVec.end());
 
-    QStringList resultMethods;
-    QStringList testQueryMethod;
-    for (const auto oneQueryMethod : fullQueryMethod)
+    std::vector<std::string> results;
+    std::vector<std::string> testQueryVec;
+    int checkPassCounter = 0;
+    for (const auto oneQuery : fullQueryVec)
     {
-        testQueryMethod.push_back(oneQueryMethod);
-        const auto testQueryMethodString = testQueryMethod.join(".");
+        testQueryVec.push_back(oneQuery);
+        std::string testQueryMethodString;
+
+        if (testQueryVec.size() > 1)
+        {
+            // Use std::accumulate to concatenate the strings with "."
+            testQueryMethodString = std::accumulate(
+                testQueryVec.begin(), testQueryVec.end(), std::string(),
+                [](const std::string& a, const std::string& b) -> std::string
+                { return a + (a.length() > 0 ? "." : "") + b; });
+        }
+        else
+        {
+            testQueryMethodString = testQueryVec[0];
+        }
 
         try
         {
-            auto sub_commands = pybind11::module_::import(
-                testQueryMethodString.toStdString().c_str());
-            auto sub_locals = pybind11::dict(**sub_commands.attr("__dict__"));
+            auto subCommands =
+                pybind11::module_::import(testQueryMethodString.c_str());
+            auto sub_locals = pybind11::dict(**subCommands.attr("__dict__"));
 
-            resultMethods.clear();
-
+            results.clear();
             for (auto item : sub_locals)
             {
                 std::stringstream ss;
                 ss << item.first;
-                const auto oneMethodName = QString::fromStdString(ss.str());
+                const std::string oneMethodName = ss.str();
 
-                if (!oneMethodName.startsWith("__"))
+                if (oneMethodName.find("__") != 0)
                 {
-                    resultMethods.push_back(oneMethodName);
+                    results.push_back(oneMethodName);
                 }
             };
+
+            checkPassCounter++;
         }
         catch (pybind11::error_already_set& e)
         {
@@ -69,9 +84,15 @@ QStringList pythonInterpreter::getMethods(const QStringList& queryList) const
                 std::cout << "PyExc_ModuleNotFoundError" << std::endl;
             }
 
-            std::cout << e.what() << std::endl;
+            // std::cout << e.what() << std::endl;
+
+            if (checkPassCounter < fullQueryVec.size() - 1)
+            {
+                results.clear();
+            }
+            break;
         }
     }
 
-    return resultMethods;
+    return results;
 }
