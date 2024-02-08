@@ -55,6 +55,8 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     layout->setStretch(1, 1);
 
     connect(model_.get(), &dataModel::dataChanged, this, &mainWindow::onDataChanged);
+
+    this->onDataChanged();
 }
 
 void mainWindow::onDataChanged()

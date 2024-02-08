@@ -16,7 +16,7 @@ class dataModel : public QObject
 {
     Q_OBJECT
   public:
-    dataModel() = default;
+    dataModel();
     ~dataModel() override = default;
 
     void addOrder(const std::shared_ptr<order>& o);
