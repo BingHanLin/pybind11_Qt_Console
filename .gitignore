@@ -2,3 +2,4 @@ bin/*
 build/*
 pybind11-env/*
 .vscode/*
+.clangd
