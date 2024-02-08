@@ -1,11 +1,29 @@
+#include <QAction>
+#include <QMenuBar>
 #include <QVBoxLayout>
 
+#include "commandManager.hpp"
 #include "mainWindow.hpp"
 #include "pythonCommands.hpp"
 #include "pythonConsole.hpp"
 
 mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 {
+    auto cmdManager = commandManager::getInstance();
+
+    auto undoAction = cmdManager->createUndoAction(this, tr("&Undo"));
+    undoAction->setShortcut(QKeySequence::Undo);
+    undoAction->setIcon(QIcon(":/icons/undo"));
+    undoAction->setShortcuts(QKeySequence::Undo);
+
+    auto redoAction = cmdManager->createRedoAction(this, tr("&Redo"));
+    redoAction->setShortcut(QKeySequence::Redo);
+    redoAction->setIcon(QIcon(":/icons/redo"));
+    redoAction->setShortcuts(QKeySequence::Redo);
+
+    this->menuBar()->addAction(undoAction);
+    this->menuBar()->addAction(redoAction);
+
     auto widget = new QWidget(this);
     auto layout = new QVBoxLayout;
 

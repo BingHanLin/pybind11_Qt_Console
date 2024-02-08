@@ -1,14 +1,6 @@
 #include "dataModel.hpp"
 
-dataModel::dataModel()
-{
-}
-
-dataModel::~dataModel()
-{
-}
-
-void dataModel::addOrder(const std::shared_ptr<order> o)
+void dataModel::addOrder(const std::shared_ptr<order>& o)
 {
     orders_.insert({o->id_, o});
     emit dataChanged();
@@ -23,11 +15,10 @@ void dataModel::removeOrder(const int id)
     }
     else
     {
-        /* v does not contain x */
     }
 }
 
-void dataModel::updateOrder(const int id, const int amount, const double price)
+void dataModel::updateOrder(const int& id, const int& amount, const double& price)
 {
     if (orders_.count(id) != 0)
     {
@@ -38,6 +29,5 @@ void dataModel::updateOrder(const int id, const int amount, const double price)
     }
     else
     {
-        /* v does not contain x */
     }
 }

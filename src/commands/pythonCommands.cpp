@@ -1,4 +1,5 @@
 #include "pythonCommands.hpp"
+#include "commandManager.hpp"
 #include "commands.hpp"
 
 std::shared_ptr<dataModel> pythonCommands::model_ = nullptr;
@@ -19,8 +20,10 @@ PYBIND11_EMBEDDED_MODULE(demo_commands, m)
                            {
                                auto newOrder = std::make_shared<order>(order{id, amount, price});
 
-                               addCommand cmd(pythonCommands::model_, newOrder);
-                               cmd.execute();
+                               auto command = new addCommand(pythonCommands::model_, newOrder);
+
+                               auto cmdManager = commandManager::getInstance();
+                               cmdManager->runCommand(command);
                            }
                        });
 
@@ -29,8 +32,10 @@ PYBIND11_EMBEDDED_MODULE(demo_commands, m)
                        {
                            if (pythonCommands::model_ != nullptr)
                            {
-                               removeCommand cmd(pythonCommands::model_, id);
-                               cmd.execute();
+                               auto command = new removeCommand(pythonCommands::model_, id);
+
+                               auto cmdManager = commandManager::getInstance();
+                               cmdManager->runCommand(command);
                            }
                        });
 
@@ -39,8 +44,10 @@ PYBIND11_EMBEDDED_MODULE(demo_commands, m)
                        {
                            if (pythonCommands::model_ != nullptr)
                            {
-                               updateCommand cmd(pythonCommands::model_, id, amount, price);
-                               cmd.execute();
+                               auto command = new updateCommand(pythonCommands::model_, id, amount, price);
+
+                               auto cmdManager = commandManager::getInstance();
+                               cmdManager->runCommand(command);
                            }
                        });
 }

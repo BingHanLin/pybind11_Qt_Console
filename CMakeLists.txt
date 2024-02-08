@@ -43,10 +43,13 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.hpp" "${PROJECT_SOURCE_DIR}/src/*.h")
 file(GLOB_RECURSE UI_FILES "${PROJECT_SOURCE_DIR}/src/*.ui")
 
+qt5_add_resources(GUI_RESOURCES "${PROJECT_SOURCE_DIR}/src/resource/resources.qrc")
+
 add_executable(${PROJECT_NAME}
     ${SRC_FILES}
     ${HEADER_FILES}
     ${UI_FILES}
+    ${GUI_RESOURCES}
 )
 
 target_include_directories(${PROJECT_NAME} 

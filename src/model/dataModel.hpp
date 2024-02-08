@@ -15,24 +15,34 @@ struct order
 class dataModel : public QObject
 {
     Q_OBJECT
-   public:
-    dataModel();
-    ~dataModel();
+  public:
+    dataModel() = default;
+    ~dataModel() override = default;
 
-    void addOrder(const std::shared_ptr<order> o);
+    void addOrder(const std::shared_ptr<order>& o);
 
-    void removeOrder(const int id);
+    void removeOrder(int id);
 
-    void updateOrder(const int id, const int amount, const double price);
+    void updateOrder(const int& id, const int& amount, const double& price);
 
-    std::map<int, std::shared_ptr<order>> orders() const
+    [[nodiscard]] std::shared_ptr<order> getOrder(const int& id) const
+    {
+        if (orders_.count(id) > 0)
+        {
+            return orders_.at(id);
+        }
+
+        return nullptr;
+    };
+
+    [[nodiscard]] std::map<int, std::shared_ptr<order>> orders() const
     {
         return orders_;
     };
 
-   signals:
+  signals:
     void dataChanged();
 
-   private:
+  private:
     std::map<int, std::shared_ptr<order>> orders_;
 };
