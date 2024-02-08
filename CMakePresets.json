@@ -5,17 +5,11 @@
             "name": "MSVC_x64-debug",
             "displayName": "MSVC_x64-debug",
             "description": "Using compilers for Visual Studio 16 2019 (x64 architecture)",
-            "generator": "Ninja",
-            "architecture": {
-                "value": "x64",
-                "strategy": "external"
-            },
+            "generator": "Visual Studio 16 2019",
+            "toolset": "host=x64",
+            "architecture": "x64",
             "binaryDir": "${sourceDir}/build/debug/${presetName}",
             "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": {
-                    "type": "BOOL",
-                    "value": "ON"
-                },
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/bin/debug/install/${presetName}",
                 "CMAKE_C_COMPILER": "cl.exe",
@@ -42,11 +36,9 @@
             "name": "MSVC_x64-release",
             "displayName": "MSVC_x64-release",
             "description": "Using compilers for Visual Studio 16 2019 (x64 architecture)",
-            "generator": "Ninja",
-            "architecture": {
-                "value": "x64",
-                "strategy": "external"
-            },
+            "generator": "Visual Studio 16 2019",
+            "toolset": "host=x64",
+            "architecture": "x64",
             "binaryDir": "${sourceDir}/build/release/${presetName}",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",

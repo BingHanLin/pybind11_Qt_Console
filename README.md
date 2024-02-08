@@ -23,7 +23,37 @@ The core code resides in the **pythonEmbedding** folder, which is an independent
 The communication bridge between Python scripts and C++ codes is built in the **pythonCommands.cpp** file. It defines the available Python modules and methods using pybind11 embedding functions, facilitating easy interaction between Python and C++ functionalities.
 
 ## Usage
-TODO.
+1. **Prepare pybind11 environment**
+
+    Set up a Python virtual environment, naming it **pybind11-env**.
+    ```bash
+    python -m venv pybind11-env
+    ```
+    After the virtual environment is created, you can activate it. On Windows, you can activate it with:
+    ```bash
+    .\pybind11-env\Scripts\activate
+    ```
+    After activation, use the following command to install the necessary package:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+2. **Configure CMakePresets.json**
+    Change the value of `Qt5_DIR` and `Qt5_BIN_DIR` in the **CMakePresets.json** to match your enviroment.
+
+3. **Build project**
+    Build the project with the following commands.
+    ```bash
+    cmake --preset MSVC_x64-release
+    ```
+    ```bash
+    cmake --build --preset MSVC_x64-release
+    ``` 
+
+    ```bash
+    cmake --install build/release/MSVC_x64-release
+    ``` 
+4. Find the executable under the **bin** folder.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](https://opensource.org/license/mit/) file for details.

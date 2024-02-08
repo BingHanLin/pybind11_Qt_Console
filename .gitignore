@@ -3,3 +3,4 @@ build/*
 pybind11-env/*
 .vscode/*
 .clangd
+CMakeUserPresets.json
