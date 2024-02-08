@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 
 #include "commandManager.hpp"
+#include "dataModel.hpp"
 #include "mainWindow.hpp"
 #include "pythonCommands.hpp"
 #include "pythonConsole.hpp"
@@ -24,9 +25,10 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     this->menuBar()->addAction(undoAction);
     this->menuBar()->addAction(redoAction);
 
-    auto widget = new QWidget(this);
     auto layout = new QVBoxLayout;
+    layout->setSpacing(15);
 
+    auto widget = new QWidget(this);
     widget->setLayout(layout);
     this->setCentralWidget(widget);
 
@@ -48,7 +50,12 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     }
 
     {
-        layout->addWidget(new pythonConsole(this));
+        auto console = new pythonConsole(this);
+        connect(undoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Undo.")); });
+        connect(redoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Redo.")); });
+        connect(model_.get(), &dataModel::messageEmerged, console, &pythonConsole::onMessagePassedIn);
+
+        layout->addWidget(console);
     }
 
     layout->setStretch(0, 2);

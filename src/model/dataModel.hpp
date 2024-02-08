@@ -19,11 +19,11 @@ class dataModel : public QObject
     dataModel();
     ~dataModel() override = default;
 
-    void addOrder(const std::shared_ptr<order>& o);
+    bool addOrder(const std::shared_ptr<order>& o);
 
-    void removeOrder(int id);
+    bool removeOrder(int id);
 
-    void updateOrder(const int& id, const int& amount, const double& price);
+    bool updateOrder(const int& id, const int& amount, const double& price);
 
     [[nodiscard]] std::shared_ptr<order> getOrder(const int& id) const
     {
@@ -42,6 +42,7 @@ class dataModel : public QObject
 
   signals:
     void dataChanged();
+    void messageEmerged(const QString& message);
 
   private:
     std::map<int, std::shared_ptr<order>> orders_;

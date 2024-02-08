@@ -14,6 +14,9 @@ class pythonConsole : public QWidget
   public:
     explicit pythonConsole(QWidget* parent = nullptr);
 
+  public slots:
+    void onMessagePassedIn(const QString& message);
+
   private:
     QTextEdit* outputTextEdit_;
 

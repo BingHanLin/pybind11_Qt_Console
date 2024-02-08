@@ -1,9 +1,10 @@
 #include <QAbstractItemView>
 #include <QKeyEvent>
+#include <QLabel>
 #include <QScrollBar>
 #include <QStringListModel>
 #include <QTextEdit>
-#include <qboxlayout.h>
+#include <QVBoxLayout>
 
 #include "pythonCommandLine.hpp"
 #include "pythonConsole.hpp"
@@ -17,6 +18,9 @@ pythonConsole::pythonConsole(QWidget* parent) : QWidget(parent), outputTextEdit_
     auto commandLine = new pythonCommandLine(interpreter, this);
 
     auto layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+
+    layout->addWidget(new QLabel(tr("Console")));
     layout->addWidget(outputTextEdit_);
     layout->addWidget(commandLine);
     layout->setStretch(0, 1);
@@ -24,6 +28,11 @@ pythonConsole::pythonConsole(QWidget* parent) : QWidget(parent), outputTextEdit_
 
     connect(interpreter.get(), &pythonInterpreter::commandInserted, this, &pythonConsole::onCommandInserted);
     connect(interpreter.get(), &pythonInterpreter::commandParsedWithError, this, &pythonConsole::onCommandParseError);
+}
+
+void pythonConsole::onMessagePassedIn(const QString& message)
+{
+    outputTextEdit_->insertPlainText(QString("%1\n").arg(message));
 }
 
 void pythonConsole::onCommandInserted(const QString& commands)

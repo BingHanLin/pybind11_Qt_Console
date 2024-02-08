@@ -31,7 +31,8 @@ class addCommand : public baseCommand
 
     void redo() override
     {
-        model_->addOrder(newOrder_);
+        const auto result = model_->addOrder(newOrder_);
+        this->setObsolete(!result);
     }
 
     void undo() override
@@ -56,7 +57,8 @@ class removeCommand : public baseCommand
     void redo() override
     {
         removedOrder_ = model_->getOrder(id_);
-        model_->removeOrder(id_);
+        const auto result = model_->removeOrder(id_);
+        this->setObsolete(!result);
     }
 
     void undo() override
@@ -82,10 +84,18 @@ class updateCommand : public baseCommand
     void redo() override
     {
         auto oldOrder = model_->getOrder(id_);
+
+        if (oldOrder == nullptr)
+        {
+            this->setObsolete(true);
+            return;
+        }
+
         oldAmount_ = oldOrder->amount_;
         oldPrice_ = oldOrder->price_;
 
-        model_->updateOrder(id_, newAmount_, newPrice_);
+        const auto result = model_->updateOrder(id_, newAmount_, newPrice_);
+        this->setObsolete(!result);
     }
 
     void undo() override
