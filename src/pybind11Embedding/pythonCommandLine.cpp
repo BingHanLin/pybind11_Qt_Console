@@ -1,13 +1,15 @@
 #include <QAbstractItemView>
+#include <QDebug>
 #include <QKeyEvent>
 #include <QScrollBar>
 #include <QStringListModel>
 #include <QTextEdit>
+#include <utility>
 
 #include "pythonCommandLine.hpp"
 
-pythonCommandLine::pythonCommandLine(QWidget *parent)
-    : QLineEdit(parent), interpreter_(std::make_shared<pythonInterpreter>()), completer_(new QCompleter(this))
+pythonCommandLine::pythonCommandLine(std::shared_ptr<pythonInterpreter> interpreter, QWidget *parent)
+    : QLineEdit(parent), interpreter_(std::move(interpreter)), completer_(new QCompleter(this))
 {
     completer_->setWidget(this);
     completer_->setCaseSensitivity(Qt::CaseSensitive);
@@ -67,7 +69,7 @@ void pythonCommandLine::keyPressEvent(QKeyEvent *event)
     const static QString endOfWord("~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-=");
 
     const QString eventText = event->text();
-    const QString completionPrefix = extractLastWord(eventText);
+    const QString completionPrefix = extractLastWord(this->text());
 
     const bool hasModifier = (event->modifiers() != Qt::NoModifier);
 

@@ -13,11 +13,11 @@ class pythonConsole : public QWidget
 
   public:
     explicit pythonConsole(QWidget* parent = nullptr);
-    void showMessage(const QString& message);
 
   private:
     QTextEdit* outputTextEdit_;
 
   private slots:
     void onCommandInserted(const QString& commands);
+    void onCommandParseError(const QString& message);
 };

@@ -13,19 +13,25 @@ pythonConsole::pythonConsole(QWidget* parent) : QWidget(parent), outputTextEdit_
     outputTextEdit_ = new QTextEdit(this);
     outputTextEdit_->setReadOnly(true);
 
-    auto commandLine = new pythonCommandLine(this);
+    auto interpreter = std::make_shared<pythonInterpreter>();
+    auto commandLine = new pythonCommandLine(interpreter, this);
 
     auto layout = new QVBoxLayout(this);
     layout->addWidget(outputTextEdit_);
     layout->addWidget(commandLine);
     layout->setStretch(0, 1);
     layout->setStretch(1, 0);
-}
 
-void pythonConsole::showMessage(const QString& message)
-{
+    connect(interpreter.get(), &pythonInterpreter::commandInserted, this, &pythonConsole::onCommandInserted);
+    connect(interpreter.get(), &pythonInterpreter::commandParsedWithError, this, &pythonConsole::onCommandParseError);
 }
 
 void pythonConsole::onCommandInserted(const QString& commands)
 {
+    outputTextEdit_->insertPlainText(QString(">>>  %1\n").arg(commands));
+}
+
+void pythonConsole::onCommandParseError(const QString& message)
+{
+    outputTextEdit_->insertPlainText(QString("Parse with error:\n%1\n").arg(message));
 }

@@ -71,7 +71,7 @@ std::vector<std::string> pythonInterpreter::getPossibleMethods(const std::vector
     return results;
 }
 
-pythonInterpreter::pythonInterpreter()
+pythonInterpreter::pythonInterpreter(QObject* parent) : QObject(parent)
 {
     pybind11::exec(R"(
         kwargs = dict(name="World", number=42)
@@ -87,6 +87,8 @@ void pythonInterpreter::runCommand(const std::string& cmd) const
 {
     try
     {
+        emit commandInserted(QString::fromStdString(cmd));
+
         pybind11::exec(cmd, pybind11::globals(), locals_);
     }
     catch (pybind11::error_already_set& e)
@@ -95,6 +97,8 @@ void pythonInterpreter::runCommand(const std::string& cmd) const
         {
             std::cout << "PyExc_ModuleNotFoundError" << std::endl;
         }
+
+        emit commandParsedWithError(QString::fromStdString(e.what()));
 
         std::cout << e.what() << std::endl;
     }
