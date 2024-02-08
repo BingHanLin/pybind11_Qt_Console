@@ -13,32 +13,57 @@ find_package(pybind11 REQUIRED)  # or `add_subdirectory(pybind11)`
 
 find_package(Qt5 REQUIRED COMPONENTS Core Network Widgets LinguistTools Gui OpenGL Concurrent)
 
-file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.cpp" "${PROJECT_SOURCE_DIR}/shonTACommon/*.cpp")
-file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.hpp" "${PROJECT_SOURCE_DIR}/src/*.hpp")
-file(GLOB_RECURSE UI_FILES "${PROJECT_SOURCE_DIR}/src/*.ui")
+file(GLOB_RECURSE EMBEDDING_SRC_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/pythonEmbedding/*.cpp")
+file(GLOB_RECURSE EMBEDDING_HEADER_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/pythonEmbedding/*.hpp" "${PROJECT_SOURCE_DIR}/pythonEmbedding/*.h")
+file(GLOB_RECURSE EMBEDDING_UI_FILES "${PROJECT_SOURCE_DIR}/pythonEmbedding/*.ui")
 
-add_executable(example
-    ${SRC_FILES}
-    ${HEADER_FILES}
-    ${UI_FILES}
+add_library(pythonEmbedding
+    STATIC
+        ${EMBEDDING_SRC_FILES}
+        ${EMBEDDING_HEADER_FILES}
+        ${EMBEDDING_UI_FILES}
 )
 
-target_include_directories(${CMAKE_PROJECT_NAME} 
-    PRIVATE 
-        ${PROJECT_SOURCE_DIR}/src
-        ${PROJECT_SOURCE_DIR}/src/commands
-        ${PROJECT_SOURCE_DIR}/src/model
-        ${PROJECT_SOURCE_DIR}/src/pythonEmbedding
+target_include_directories(pythonEmbedding
+    PUBLIC 
+        ${PROJECT_SOURCE_DIR}/pythonEmbedding
 )
 
-
-target_link_libraries(${CMAKE_PROJECT_NAME} 
+target_link_libraries(pythonEmbedding
     PRIVATE 
         Qt5::Core 
         Qt5::Gui 
         Qt5::Widgets
         Qt5::Network
         pybind11::embed
+)
+
+
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/*.hpp" "${PROJECT_SOURCE_DIR}/src/*.h")
+file(GLOB_RECURSE UI_FILES "${PROJECT_SOURCE_DIR}/src/*.ui")
+
+add_executable(${PROJECT_NAME}
+    ${SRC_FILES}
+    ${HEADER_FILES}
+    ${UI_FILES}
+)
+
+target_include_directories(${PROJECT_NAME} 
+    PRIVATE 
+        ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/src/commands
+        ${PROJECT_SOURCE_DIR}/src/model
+)
+
+target_link_libraries(${PROJECT_NAME} 
+    PRIVATE 
+        Qt5::Core 
+        Qt5::Gui 
+        Qt5::Widgets
+        Qt5::Network
+        pybind11::embed
+        pythonEmbedding
 )
 
 # execute windeployqt.exe
