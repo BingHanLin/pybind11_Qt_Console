@@ -28,7 +28,7 @@ target_include_directories(${CMAKE_PROJECT_NAME}
         ${PROJECT_SOURCE_DIR}/src
         ${PROJECT_SOURCE_DIR}/src/commands
         ${PROJECT_SOURCE_DIR}/src/model
-        ${PROJECT_SOURCE_DIR}/src/pythonTerminal
+        ${PROJECT_SOURCE_DIR}/src/pybind11Embedding
 )
 
 

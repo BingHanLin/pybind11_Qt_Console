@@ -5,11 +5,17 @@
             "name": "MSVC_x64-debug",
             "displayName": "MSVC_x64-debug",
             "description": "Using compilers for Visual Studio 16 2019 (x64 architecture)",
-            "generator": "Visual Studio 16 2019",
-            "toolset": "host=x64",
-            "architecture": "x64",
+            "generator": "Ninja",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
             "binaryDir": "${sourceDir}/build/debug/${presetName}",
             "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": {
+                    "type": "BOOL",
+                    "value": "ON"
+                },
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/bin/debug/install/${presetName}",
                 "CMAKE_C_COMPILER": "cl.exe",
@@ -30,15 +36,29 @@
                     "type": "PATH",
                     "value": "${sourceDir}/extern/pybind11/build/lib/pybind11/share/cmake/pybind11"
                 }
+            },
+            "environment": {
+                "VCToolsVersion": "14.29.30133",
+                "WindowsSDKVersion": "10.0.19041.0",
+                "VCArch": "x64",
+                "VCToolsInstallDir": "C:/Applications/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/$env{VCToolsVersion}",
+                "WindowsSdkDir": "C:/Windows Kits/10",
+                "WindowsSdkIncVerDir": "$env{WindowsSdkDir}/Include/$env{WindowsSDKVersion}",
+                "WindowsSdkLibVerDir": "$env{WindowsSdkDir}/Lib/$env{WindowsSDKVersion}",
+                "INCLUDE": "$env{VCToolsInstallDir}/ATLMFC/include;$env{VCToolsInstallDir}/include;$env{WindowsSdkIncVerDir}/ucrt;$env{WindowsSdkIncVerDir}/shared;$env{WindowsSdkIncVerDir}/um;$env{WindowsSdkIncVerDir}/winrt;$env{WindowsSdkIncVerDir}/cppwinrt",
+                "LIB": "$env{VCToolsInstallDir}/ATLMFC/lib/$env{VCArch};$env{VCToolsInstallDir}/lib/$env{VCArch};$env{WindowsSdkLibVerDir}/ucrt/$env{VCArch};$env{WindowsSdkLibVerDir}/um/$env{VCArch}",
+                "PATH": "$env{VCToolsInstallDir}/bin/HostX64/$env{VCArch};$env{WindowsSdkDir}/bin/$env{WindowsSDKVersion}/$env{VCArch};$penv{PATH}"
             }
         },
         {
             "name": "MSVC_x64-release",
             "displayName": "MSVC_x64-release",
             "description": "Using compilers for Visual Studio 16 2019 (x64 architecture)",
-            "generator": "Visual Studio 16 2019",
-            "toolset": "host=x64",
-            "architecture": "x64",
+            "generator": "Ninja",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
             "binaryDir": "${sourceDir}/build/release/${presetName}",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",

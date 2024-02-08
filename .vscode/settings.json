@@ -84,6 +84,12 @@
         "qundocommand": "cpp",
         "qkeyevent": "cpp",
         "qdockwidget": "cpp",
-        "fstream": "cpp"
-    }
+        "fstream": "cpp",
+        "qobject": "cpp",
+        "qabstractitemview": "cpp",
+        "qstringlistmodel": "cpp"
+    },
+    "editor.formatOnSave": true,
+    "files.autoSave": "onFocusChange",
+    "editor.defaultFormatter": "xaver.clang-format"
 }

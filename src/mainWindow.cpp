@@ -1,7 +1,8 @@
 #include <QVBoxLayout>
 
 #include "mainWindow.hpp"
-#include "pythonTerminal.hpp"
+#include "pythonCommands.hpp"
+#include "pythonConsole.hpp"
 
 mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 {
@@ -10,6 +11,10 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 
     widget->setLayout(layout);
     this->setCentralWidget(widget);
+
+    model_ = std::make_shared<dataModel>();
+
+    pythonCommands::setDataModel(model_);
 
     {
         table_ = new QTableWidget(this);
@@ -25,16 +30,13 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     }
 
     {
-        model_ = std::make_shared<dataModel>();
-        interpreter_ = std::make_shared<pythonInterpreter>(model_);
-        layout->addWidget(new pythonTerminal(interpreter_, this));
+        layout->addWidget(new pythonConsole(this));
     }
 
     layout->setStretch(0, 2);
     layout->setStretch(1, 1);
 
-    connect(model_.get(), &dataModel::dataChanged, this,
-            &mainWindow::onDataChanged);
+    connect(model_.get(), &dataModel::dataChanged, this, &mainWindow::onDataChanged);
 }
 
 void mainWindow::onDataChanged()
@@ -42,17 +44,14 @@ void mainWindow::onDataChanged()
     const auto orders = model_->orders();
 
     table_->clearContents();
-    table_->setRowCount(orders.size());
+    table_->setRowCount((int)orders.size());
 
     int counter = 0;
     for (const auto& [id, order] : orders)
     {
-        table_->setItem(counter, 0,
-                        new QTableWidgetItem(QString::number(order->id_)));
-        table_->setItem(counter, 1,
-                        new QTableWidgetItem(QString::number(order->amount_)));
-        table_->setItem(counter, 2,
-                        new QTableWidgetItem(QString::number(order->price_)));
+        table_->setItem(counter, 0, new QTableWidgetItem(QString::number(order->id_)));
+        table_->setItem(counter, 1, new QTableWidgetItem(QString::number(order->amount_)));
+        table_->setItem(counter, 2, new QTableWidgetItem(QString::number(order->price_)));
 
         counter++;
     }

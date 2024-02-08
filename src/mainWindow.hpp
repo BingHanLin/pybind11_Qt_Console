@@ -10,14 +10,14 @@
 class mainWindow : public QMainWindow
 {
     Q_OBJECT
-   public:
+  public:
     mainWindow(QWidget* parent = nullptr);
 
-   private:
+  private:
     std::shared_ptr<pythonInterpreter> interpreter_;
     std::shared_ptr<dataModel> model_;
     QTableWidget* table_;
 
-   private slots:
+  private slots:
     void onDataChanged();
 };
