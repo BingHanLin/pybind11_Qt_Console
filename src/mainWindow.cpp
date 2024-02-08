@@ -10,6 +10,8 @@
 
 mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 {
+    this->setWindowTitle(tr("pybind11 Qt Console"));
+
     auto cmdManager = commandManager::getInstance();
 
     auto undoAction = cmdManager->createUndoAction(this, tr("&Undo"));

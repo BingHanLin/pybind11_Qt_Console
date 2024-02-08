@@ -1,37 +1,29 @@
-# Simple VTK Transform Widget
+# pybind11 Qt Console
 
 ## Overview
 
-This project implements a VTK (Visualization Toolkit) transform widget. This widget allows users to interactively manipulate 3D objects by applying translation and rotation.
+This project embeds a Python console into Qt using the pybind11 package. The Python console includes simple auto-completion capabilities and integrates with an undo/redo framework.
 
-![Transform widget](./asset/animation.gif)
+![](./asset/image.png)
 
 ## Features
-* Interactive 3D transformation widget.
-* Supports translation, rotation ans scale of 3D objects.
-* Follow the widget/represent implementation to decouple Event Processing from Widget Geometry.
+
+* Python Console Integration: Incorporate a Python console into your Qt application, enabling direct interaction with Python code.
+
+* Auto-Completion: Provide context-aware suggestions as the user types.
+
+* Undo/Redo Framework: Support reverting and restoring changes.
+
 * MIT License for easy integration into your own projects.
 
-## Usage
-1. Clone the repository to your local machine.
-    ```
-    git clone https://github.com/yourusername/vtk-transformation-widget.git
-    ```
-2. Configure project through cmake command. You should replace `<YOUR_VTK_LIB_PATH>` with the actual path to your VTK library.
-    ```
-    cmake   -S . -B build \
-            -D CMAKE_BUILD_TYPE=Release \
-            -D CMAKE_INSTALL_PREFIX="./install" \
-            -D VTK_DIR=<YOUR_VTK_LIB_PATH> \
-            -G "Visual Studio 16 2019" -A x64
-    ```
-3. Build and install the project through cmake command.
-    ```
-    cmake --build build --config Release
+## Structure
 
-    cmake --install build --config Release
-    ```
-4. Find and execute the main.exe in the `install` folder. To run it successfully,you may need to incdue VTK binary path in the enviroment variable `PATH `.
+The core code resides in the **pythonEmbedding** folder, which is an independent target in the CMakeLists.txt script.
+
+The communication bridge between Python scripts and C++ codes is built in the **pythonCommands.cpp** file. It defines the available Python modules and methods using pybind11 embedding functions, facilitating easy interaction between Python and C++ functionalities.
+
+## Usage
+TODO.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](https://opensource.org/license/mit/) file for details.
@@ -39,8 +31,7 @@ This project is licensed under the MIT License - see the [LICENSE](https://opens
 ## Contributions
 Contributions to this project are welcome. Please feel free to submit issues or pull requests to improve the functionality or fix any bugs.
 
-# Custom Completer Example
-https://doc.qt.io/qt-6/qtwidgets-tools-customcompleter-example.html
-
-# avogadro pythonterminal.cpp
-https://github.com/cryos/avogadro/blob/master/libavogadro/src/extensions/pythonterminal.cpp
+## Reference
+1. [Qt Completer](https://doc.qt.io/qt-5/qtwidgets-tools-customcompleter-example.html)
+1. [avogadro pythonterminal.cpp](https://github.com/cryos/avogadro/blob/master/libavogadro/src/extensions/pythonterminal.cpp)
+1. [pybind11: Embedding the interpreter](https://pybind11.readthedocs.io/en/latest/advanced/embedding.html)

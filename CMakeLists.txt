@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5...3.26)
 
-project(example LANGUAGES CXX C)
+project(pybind1_Qt_Console LANGUAGES CXX C)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
