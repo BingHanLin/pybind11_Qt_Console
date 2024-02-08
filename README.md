@@ -39,7 +39,7 @@ The communication bridge between Python scripts and C++ codes is built in the **
     ```
 
 2. **Configure CMakePresets.json**
-    Change the value of `Qt5_DIR` and `Qt5_BIN_DIR` in the **CMakePresets.json** to match your enviroment.
+    Change the value of `Qt5_DIR` and `Qt5_BIN_DIR` in the **CMakePresets.json** to match your environment.
 
 3. **Build project**
     Build the project with the following commands.
