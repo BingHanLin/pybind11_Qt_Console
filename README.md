@@ -65,3 +65,6 @@ Contributions to this project are welcome. Please feel free to submit issues or 
 1. [Qt Completer](https://doc.qt.io/qt-5/qtwidgets-tools-customcompleter-example.html)
 1. [avogadro pythonterminal.cpp](https://github.com/cryos/avogadro/blob/master/libavogadro/src/extensions/pythonterminal.cpp)
 1. [pybind11: Embedding the interpreter](https://pybind11.readthedocs.io/en/latest/advanced/embedding.html)
+1. [QPyConsole](https://github.com/roozbehg/QPyConsole)
+1. [Creating a Scripting Egnine with pybind11. Step by step.](https://github.com/aoloe/cpp-pybind11-playground)
+1. [QtCpp-PythonConsole](https://github.com/kaiware0x/QtCpp-PythonConsole)
