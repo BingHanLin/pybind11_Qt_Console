@@ -27,6 +27,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CUSTOMIZE_RUNTIME_OUTPUT_DIRECTORY})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CUSTOMIZE_LIBRARY_OUTPUT_DIRECTORY})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CUSTOMIZE_ARCHIVE_OUTPUT_DIRECTORY})
 
+# Generate clangd configuration(for developing enviroment only)
+if(MSVC)
+    file(WRITE ${PROJECT_SOURCE_DIR}/.clangd "CompileFlags:\n")
+    file(APPEND ${PROJECT_SOURCE_DIR}/.clangd "    CompilationDatabase: ${CMAKE_BINARY_DIR}\n")
+    file(APPEND ${PROJECT_SOURCE_DIR}/.clangd "    Add:\n")
+
+    set(MSVC_STANDARD_INCLUDE_PATHS "$ENV{INCLUDE}")
+    foreach(ONE_PATH ${MSVC_STANDARD_INCLUDE_PATHS})
+        file(APPEND ${PROJECT_SOURCE_DIR}/.clangd "        - \"-I${ONE_PATH}\"\n")
+    endforeach()
+endif()
+
 
 find_package(pybind11 REQUIRED)  # or `add_subdirectory(pybind11)`
 
