@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <utility>
+#include <vector>
 
 #include <pybind11/stl.h>
 
@@ -33,6 +34,46 @@ std::vector<std::string> pythonInterpreter::getPossibleMethods(const std::vector
 
         try
         {
+            {
+                auto module = pybind11::module_::import(testQueryMethodString.c_str());
+                // auto module = pybind11::module_::import("demo_commands.order_commands");
+                auto object = pybind11::object(module.attr("__dict__"));
+
+                const auto subModules = pybind11::eval(
+                                            R"(
+                            [name for name in dir() if __import__('importlib').import_module('inspect').ismodule(globals()[name])]
+                          )",
+                                            object)
+                                            .cast<std::vector<std::string>>();
+
+                const auto functions = pybind11::eval(
+                                           R"(
+                            [name for name in dir() if __import__('importlib').import_module('inspect').isroutine(globals()[name])]
+                          )",
+                                           object)
+                                           .cast<std::vector<std::string>>();
+
+                std::cout << "=========================" << std::endl;
+                std::cout << "testQueryMethodString: " << testQueryMethodString << std::endl;
+                if (!subModules.empty())
+                {
+                    std::cout << "module:" << std::endl;
+                    for (const auto& module : subModules)
+                    {
+                        std::cout << module << std::endl;
+                    };
+                }
+
+                if (!functions.empty())
+                {
+                    std::cout << "function:" << std::endl;
+                    for (const auto& function : functions)
+                    {
+                        std::cout << function << std::endl;
+                    };
+                }
+            }
+
             auto subCommands = pybind11::module_::import(testQueryMethodString.c_str());
             auto sub_locals = pybind11::dict(**subCommands.attr("__dict__"));
 
@@ -80,7 +121,7 @@ pythonInterpreter::pythonInterpreter(QObject* parent) : QObject(parent)
     )");
 
     auto demo_commands = pybind11::module_::import("demo_commands");
-    locals_ = pybind11::dict(**demo_commands.attr("__dict__"));
+    locals_ = demo_commands.attr("__dict__");
 }
 
 void pythonInterpreter::runCommand(const std::string& cmd) const
