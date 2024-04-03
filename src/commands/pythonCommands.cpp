@@ -11,7 +11,7 @@ void pythonCommands::setDataModel(std::shared_ptr<dataModel> model)
 
 PYBIND11_EMBEDDED_MODULE(demo_commands, m)
 {
-    pybind11::module_ order_commands = m.def_submodule("order_commands", "A submodule of demo_commands'");
+    pybind11::module_ order_commands = m.def_submodule("order_commands", "A submodule of demo_commands");
 
     order_commands.def(
         "add_order",
@@ -27,12 +27,7 @@ PYBIND11_EMBEDDED_MODULE(demo_commands, m)
                 cmdManager->runCommand(command);
             }
         },
-        R"mydelimiter(
-    The add order function
-
-    Parameters
-    ----------
-)mydelimiter");
+        "Add order with id and contents.", pybind11::arg("id"), pybind11::arg("amount"), pybind11::arg("price"));
 
     order_commands.def(
         "remove_order",
@@ -46,22 +41,19 @@ PYBIND11_EMBEDDED_MODULE(demo_commands, m)
                 cmdManager->runCommand(command);
             }
         },
-        R"mydelimiter(
-    The remove oder function
+        "Remove order with id.", pybind11::arg("id"));
 
-    Parameters
-    ----------
-)mydelimiter");
+    order_commands.def(
+        "update_order",
+        [](int id, int amount, double price)
+        {
+            if (pythonCommands::model_ != nullptr)
+            {
+                auto command = new updateCommand(pythonCommands::model_, id, amount, price);
 
-    order_commands.def("update_order",
-                       [](int id, int amount, double price)
-                       {
-                           if (pythonCommands::model_ != nullptr)
-                           {
-                               auto command = new updateCommand(pythonCommands::model_, id, amount, price);
-
-                               auto cmdManager = commandManager::getInstance();
-                               cmdManager->runCommand(command);
-                           }
-                       });
+                auto cmdManager = commandManager::getInstance();
+                cmdManager->runCommand(command);
+            }
+        },
+        "Update order with id and contents.", pybind11::arg("id"), pybind11::arg("amount"), pybind11::arg("price"));
 }

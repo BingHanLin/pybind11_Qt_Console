@@ -58,9 +58,14 @@ std::vector<std::string> pythonInterpreter::getPossibleMethods(const std::vector
                 if (!subModules.empty())
                 {
                     std::cout << "module:" << std::endl;
-                    for (const auto& module : subModules)
+                    for (const auto& submodule : subModules)
                     {
-                        std::cout << module << std::endl;
+                        std::cout << ">>>>>" << std::endl;
+
+                        std::cout << submodule << std::endl;
+
+                        auto obj = module.attr(submodule.c_str());
+                        std::cout << obj.doc().cast<std::string>() << std::endl;
                     };
                 }
 
@@ -69,7 +74,12 @@ std::vector<std::string> pythonInterpreter::getPossibleMethods(const std::vector
                     std::cout << "function:" << std::endl;
                     for (const auto& function : functions)
                     {
+                        std::cout << ">>>>>" << std::endl;
+
                         std::cout << function << std::endl;
+
+                        auto obj = module.attr(function.c_str());
+                        std::cout << obj.doc().cast<std::string>() << std::endl;
                     };
                 }
             }
