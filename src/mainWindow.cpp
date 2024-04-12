@@ -1,8 +1,14 @@
 #include <QAction>
+#include <QDoubleSpinBox>
+#include <QLabel>
 #include <QMenuBar>
+#include <QPushButton>
+#include <QSpinBox>
+#include <QTextBrowser>
 #include <QVBoxLayout>
 
 #include "commandManager.hpp"
+#include "commands.hpp"
 #include "dataModel.hpp"
 #include "mainWindow.hpp"
 #include "pythonCommands.hpp"
@@ -26,6 +32,26 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 
     this->menuBar()->addAction(undoAction);
     this->menuBar()->addAction(redoAction);
+
+    auto onOffAction = new QAction(tr(" Record"), this);
+    onOffAction->setCheckable(true);
+    onOffAction->setChecked(true);
+    this->menuBar()->addAction(onOffAction);
+
+    connect(onOffAction, &QAction::toggled, this,
+            [onOffAction](bool checked)
+            {
+                if (checked)
+                {
+                    commandManager::getInstance()->startRecording();
+                    onOffAction->setText(tr(" Recording"));
+                }
+                else
+                {
+                    commandManager::getInstance()->stopRecording();
+                    onOffAction->setText(tr(" Record"));
+                }
+            });
 
     auto layout = new QVBoxLayout;
     layout->setSpacing(15);
@@ -52,12 +78,85 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     }
 
     {
+        auto hlayout1 = new QHBoxLayout;
+        hlayout1->setContentsMargins(0, 0, 0, 0);
+
+        auto idEdit = new QSpinBox(this);
+        auto amountEdit = new QSpinBox(this);
+        auto priceEdit = new QDoubleSpinBox(this);
+
+        hlayout1->addWidget(new QLabel(tr("ID: "), this));
+        hlayout1->addWidget(idEdit);
+        hlayout1->addWidget(new QLabel(tr("Amount: "), this));
+        hlayout1->addWidget(amountEdit);
+        hlayout1->addWidget(new QLabel(tr("Price: "), this));
+        hlayout1->addWidget(priceEdit);
+
+        auto hlayout2 = new QHBoxLayout;
+        hlayout2->setContentsMargins(0, 0, 0, 0);
+
+        auto addOrderButton = new QPushButton(tr("Add Order"), this);
+        auto removeOrderButton = new QPushButton(tr("Remove Order"), this);
+        auto updateOrderButton = new QPushButton(tr("Update Order"), this);
+
+        connect(addOrderButton, &QPushButton::clicked, this,
+                [idEdit, amountEdit, priceEdit]()
+                {
+                    auto newOrder =
+                        std::make_shared<order>(order{idEdit->value(), amountEdit->value(), priceEdit->value()});
+
+                    auto command = new addCommand(pythonCommands::model_, newOrder);
+
+                    auto cmdManager = commandManager::getInstance();
+                    cmdManager->runCommand(command);
+                });
+
+        connect(removeOrderButton, &QPushButton::clicked, this,
+                [idEdit]()
+                {
+                    auto command = new removeCommand(pythonCommands::model_, idEdit->value());
+
+                    auto cmdManager = commandManager::getInstance();
+                    cmdManager->runCommand(command);
+                });
+
+        connect(updateOrderButton, &QPushButton::clicked, this,
+                [idEdit, amountEdit, priceEdit]()
+                {
+                    auto command = new updateCommand(pythonCommands::model_, idEdit->value(), amountEdit->value(),
+                                                     priceEdit->value());
+
+                    auto cmdManager = commandManager::getInstance();
+                    cmdManager->runCommand(command);
+                });
+
+        hlayout2->addWidget(addOrderButton);
+        hlayout2->addWidget(removeOrderButton);
+        hlayout2->addWidget(updateOrderButton);
+
+        layout->addLayout(hlayout1);
+        layout->addLayout(hlayout2);
+    }
+
+    {
         auto console = new pythonConsole(this);
         connect(undoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Undo.")); });
         connect(redoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Redo.")); });
         connect(model_.get(), &dataModel::messageEmerged, console, &pythonConsole::onMessagePassedIn);
 
         layout->addWidget(console);
+    }
+
+    {
+        auto recordingBrowser = new QTextBrowser(this);
+
+        connect(cmdManager, &commandManager::recordingInserted, this,
+                [recordingBrowser](const QString& recording) { recordingBrowser->append(recording); });
+
+        connect(cmdManager, &commandManager::recordingStarted, this,
+                [recordingBrowser]() { recordingBrowser->clear(); });
+
+        layout->addWidget(recordingBrowser);
     }
 
     layout->setStretch(0, 2);
