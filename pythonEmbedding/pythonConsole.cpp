@@ -26,8 +26,9 @@ pythonConsole::pythonConsole(QWidget* parent) : QWidget(parent), outputTextEdit_
     layout->setStretch(0, 1);
     layout->setStretch(1, 0);
 
-    connect(interpreter.get(), &pythonInterpreter::commandInserted, this, &pythonConsole::onCommandInserted);
-    connect(interpreter.get(), &pythonInterpreter::commandParsedWithError, this, &pythonConsole::onCommandParseError);
+    connect(interpreter.get(), &pythonInterpreter::pyCommandBeforeInserted, this, &pythonConsole::onCommandInserted);
+    connect(interpreter.get(), &pythonInterpreter::pyCommandStdOutput, this, &pythonConsole::onCommandStdOutput);
+    connect(interpreter.get(), &pythonInterpreter::pyCommandParsedWithError, this, &pythonConsole::onCommandParseError);
 }
 
 void pythonConsole::onMessagePassedIn(const QString& message)
@@ -38,6 +39,11 @@ void pythonConsole::onMessagePassedIn(const QString& message)
 void pythonConsole::onCommandInserted(const QString& commands)
 {
     outputTextEdit_->insertPlainText(QString(">>>  %1\n").arg(commands));
+}
+
+void pythonConsole::onCommandStdOutput(const QString& outputs)
+{
+    outputTextEdit_->insertPlainText(QString("%1\n").arg(outputs));
 }
 
 void pythonConsole::onCommandParseError(const QString& message)

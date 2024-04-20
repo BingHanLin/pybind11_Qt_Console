@@ -138,9 +138,13 @@ void pythonInterpreter::runCommand(const std::string& cmd) const
 {
     try
     {
-        emit commandInserted(QString::fromStdString(cmd));
+        emit pyCommandBeforeInserted(QString::fromStdString(cmd));
+
+        pyStdErrOutStreamRedirect redirect;
 
         pybind11::exec(cmd, pybind11::globals(), locals_);
+
+        emit pyCommandStdOutput(QString::fromStdString(redirect.stdoutString()));
     }
     catch (pybind11::error_already_set& e)
     {
@@ -149,7 +153,7 @@ void pythonInterpreter::runCommand(const std::string& cmd) const
             std::cout << "PyExc_ModuleNotFoundError" << std::endl;
         }
 
-        emit commandParsedWithError(QString::fromStdString(e.what()));
+        emit pyCommandParsedWithError(QString::fromStdString(e.what()));
 
         std::cout << e.what() << std::endl;
     }

@@ -14,7 +14,6 @@ class mainWindow : public QMainWindow
     mainWindow(QWidget* parent = nullptr);
 
   private:
-    std::shared_ptr<pythonInterpreter> interpreter_;
     std::shared_ptr<dataModel> model_;
     QTableWidget* table_;
 

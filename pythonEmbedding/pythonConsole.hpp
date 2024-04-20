@@ -22,5 +22,6 @@ class pythonConsole : public QWidget
 
   private slots:
     void onCommandInserted(const QString& commands);
+    void onCommandStdOutput(const QString& outputs);
     void onCommandParseError(const QString& message);
 };

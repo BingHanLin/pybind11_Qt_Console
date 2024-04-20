@@ -27,9 +27,17 @@ PYBIND11_EMBEDDED_MODULE(demo_commands, m)
 
     pybind11::module_ order_commands = m.def_submodule("order_commands", "A submodule of demo_commands");
 
+    pybind11::class_<order>(order_commands, "order")
+        .def("__repr__",
+             [](const order& o)
+             {
+                 return "<order: id " + std::to_string(o.id_) + ", amount " + std::to_string(o.amount_) + ", price " +
+                        std::to_string(o.price_) + ">";
+             });
+
     order_commands.def(
         "add_order",
-        [](int id, int amount, double price)
+        [](int id, int amount, double price) -> order*
         {
             if (pythonCommands::model_ != nullptr)
             {
@@ -39,9 +47,14 @@ PYBIND11_EMBEDDED_MODULE(demo_commands, m)
 
                 auto cmdManager = commandManager::getInstance();
                 cmdManager->runCommand(command);
+
+                return pythonCommands::model_->getOrder(id).get();
             }
+
+            return nullptr;
         },
-        "Add order with id and contents.", pybind11::arg("id"), pybind11::arg("amount"), pybind11::arg("price"));
+        pybind11::return_value_policy::reference, "Add order with id and contents.", pybind11::arg("id"),
+        pybind11::arg("amount"), pybind11::arg("price"));
 
     {
         addCommand::scriptCallbackType callback = [](int id, int amount, double price) -> std::string
