@@ -25,6 +25,7 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     this->setWindowTitle(tr("pybind11 Qt Console"));
 
     auto cmdManager = commandManager::getInstance();
+    cmdManager->setMaxCommandNumber(1);
 
     auto undoAction = cmdManager->createUndoAction(this, tr("&Undo"));
     undoAction->setShortcut(QKeySequence::Undo);
@@ -85,8 +86,7 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         connect(addOrderButton, &QPushButton::clicked, this,
                 [idEdit, amountEdit, priceEdit]()
                 {
-                    auto newOrder =
-                        std::make_shared<order>(order{idEdit->value(), amountEdit->value(), priceEdit->value()});
+                    auto newOrder = std::make_shared<order>(idEdit->value(), amountEdit->value(), priceEdit->value());
 
                     auto command = new addCommand(pythonCommands::model_, newOrder);
 

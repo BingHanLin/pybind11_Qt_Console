@@ -2,6 +2,7 @@
 
 #include "commandManager.hpp"
 #include "commands.hpp"
+#include "order.hpp"
 #include "pythonCommands.hpp"
 
 std::shared_ptr<dataModel> pythonCommands::model_ = nullptr;
@@ -41,7 +42,7 @@ PYBIND11_EMBEDDED_MODULE(demo_commands, m)
         {
             if (pythonCommands::model_ != nullptr)
             {
-                auto newOrder = std::make_shared<order>(order{id, amount, price});
+                auto newOrder = std::make_shared<order>(id, amount, price);
 
                 auto command = new addCommand(pythonCommands::model_, newOrder);
 
@@ -69,7 +70,7 @@ PYBIND11_EMBEDDED_MODULE(demo_commands, m)
 
     order_commands.def(
         "remove_order",
-        [](int id)
+        [](int id) -> void
         {
             if (pythonCommands::model_ != nullptr)
             {
@@ -94,7 +95,7 @@ PYBIND11_EMBEDDED_MODULE(demo_commands, m)
 
     order_commands.def(
         "update_order",
-        [](int id, int amount, double price)
+        [](int id, int amount, double price) -> void
         {
             if (pythonCommands::model_ != nullptr)
             {
