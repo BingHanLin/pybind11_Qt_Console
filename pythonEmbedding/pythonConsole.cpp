@@ -32,20 +32,36 @@ pythonConsole::pythonConsole(QWidget* parent) : QWidget(parent), outputTextEdit_
 
 void pythonConsole::onMessagePassedIn(const QString& message)
 {
-    outputTextEdit_->insertPlainText(QString("%1\n").arg(message));
+    auto test = message.toStdString();
+
+    outputTextEdit_->append(QString("%1\n").arg(message));
+
+    outputTextEdit_->verticalScrollBar()->setValue(outputTextEdit_->verticalScrollBar()->maximum());
 }
 
 void pythonConsole::onCommandInserted(const QString& commands)
 {
-    outputTextEdit_->insertPlainText(QString(">>>  %1\n").arg(commands));
+    auto test = commands.toStdString();
+
+    outputTextEdit_->append(QString(">>>  %1\n").arg(commands));
+
+    outputTextEdit_->verticalScrollBar()->setValue(outputTextEdit_->verticalScrollBar()->maximum());
 }
 
 void pythonConsole::onCommandStdOutput(const QString& outputs)
 {
-    outputTextEdit_->insertPlainText(QString("%1\n").arg(outputs));
+    auto test = outputs.toStdString();
+
+    outputTextEdit_->append(QString("%1\n").arg(outputs));
+
+    outputTextEdit_->verticalScrollBar()->setValue(outputTextEdit_->verticalScrollBar()->maximum());
 }
 
 void pythonConsole::onCommandParseError(const QString& message)
 {
-    outputTextEdit_->insertPlainText(QString("Parse with error:\n%1\n").arg(message));
+    auto test = message.toStdString();
+
+    outputTextEdit_->append(QString("Parse with error:\n%1\n").arg(message));
+
+    outputTextEdit_->verticalScrollBar()->setValue(outputTextEdit_->verticalScrollBar()->maximum());
 }
