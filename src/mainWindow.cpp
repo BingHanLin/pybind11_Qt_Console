@@ -1,8 +1,20 @@
 #include <QAction>
+#include <QDockWidget>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
+#include <QGroupBox>
+#include <QLabel>
 #include <QMenuBar>
+#include <QPushButton>
+#include <QSpinBox>
+#include <QTextBrowser>
+#include <QToolButton>
 #include <QVBoxLayout>
+#include <qlineedit.h>
+#include <qnamespace.h>
 
 #include "commandManager.hpp"
+#include "commands.hpp"
 #include "dataModel.hpp"
 #include "mainWindow.hpp"
 #include "pythonCommands.hpp"
@@ -52,16 +64,122 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     }
 
     {
+        auto formLayout = new QFormLayout;
+        formLayout->setContentsMargins(0, 0, 0, 0);
+
+        auto idEdit = new QSpinBox(this);
+        auto amountEdit = new QSpinBox(this);
+        auto priceEdit = new QDoubleSpinBox(this);
+
+        formLayout->addRow(new QLabel(tr("ID: ")), idEdit);
+        formLayout->addRow(new QLabel(tr("Amount: ")), amountEdit);
+        formLayout->addRow(new QLabel(tr("Price: ")), priceEdit);
+
+        auto hlayout = new QHBoxLayout;
+        hlayout->setContentsMargins(0, 0, 0, 0);
+
+        auto addOrderButton = new QPushButton(tr("Add Order"), this);
+        auto removeOrderButton = new QPushButton(tr("Remove Order"), this);
+        auto updateOrderButton = new QPushButton(tr("Update Order"), this);
+
+        connect(addOrderButton, &QPushButton::clicked, this,
+                [idEdit, amountEdit, priceEdit]()
+                {
+                    auto newOrder =
+                        std::make_shared<order>(order{idEdit->value(), amountEdit->value(), priceEdit->value()});
+
+                    auto command = new addCommand(pythonCommands::model_, newOrder);
+
+                    auto cmdManager = commandManager::getInstance();
+                    cmdManager->runCommand(command);
+                });
+
+        connect(removeOrderButton, &QPushButton::clicked, this,
+                [idEdit]()
+                {
+                    auto command = new removeCommand(pythonCommands::model_, idEdit->value());
+
+                    auto cmdManager = commandManager::getInstance();
+                    cmdManager->runCommand(command);
+                });
+
+        connect(updateOrderButton, &QPushButton::clicked, this,
+                [idEdit, amountEdit, priceEdit]()
+                {
+                    auto command = new updateCommand(pythonCommands::model_, idEdit->value(), amountEdit->value(),
+                                                     priceEdit->value());
+
+                    auto cmdManager = commandManager::getInstance();
+                    cmdManager->runCommand(command);
+                });
+
+        hlayout->addWidget(addOrderButton);
+        hlayout->addWidget(removeOrderButton);
+        hlayout->addWidget(updateOrderButton);
+        hlayout->addStretch();
+
+        auto groupBox = new QGroupBox(tr("Order Operations"), this);
+        auto groupBoxLayout = new QVBoxLayout(groupBox);
+
+        groupBoxLayout->addLayout(formLayout);
+        groupBoxLayout->addLayout(hlayout);
+
+        layout->addWidget(groupBox);
+    }
+
+    {
         auto console = new pythonConsole(this);
         connect(undoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Undo.")); });
         connect(redoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Redo.")); });
         connect(model_.get(), &dataModel::messageEmerged, console, &pythonConsole::onMessagePassedIn);
 
-        layout->addWidget(console);
+        auto dockWidget = new QDockWidget(tr("Python Console"), this);
+        dockWidget->setWidget(console);
+        this->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
     }
 
-    layout->setStretch(0, 2);
-    layout->setStretch(1, 1);
+    {
+        auto recordWidget = new QWidget(this);
+        auto recordWidgetLayout = new QVBoxLayout(recordWidget);
+        recordWidgetLayout->setContentsMargins(9, 9, 9, 9);
+
+        auto recordBtn = new QToolButton(this);
+        recordBtn->setText(tr("Start Record"));
+        recordBtn->setCheckable(true);
+        recordBtn->setChecked(false);
+        recordWidgetLayout->addWidget(recordBtn);
+
+        auto recordingBrowser = new QTextBrowser(this);
+        recordWidgetLayout->addWidget(recordingBrowser);
+
+        connect(recordBtn, &QToolButton::toggled, this,
+                [recordBtn, recordingBrowser](bool checked)
+                {
+                    if (checked)
+                    {
+                        commandManager::getInstance()->startRecording();
+                        recordBtn->setText(tr("Stop Record"));
+                    }
+                    else
+                    {
+                        commandManager::getInstance()->stopRecording();
+                        recordBtn->setText(tr("Start Record"));
+                    }
+                });
+
+        connect(cmdManager, &commandManager::recordingInserted, this,
+                [recordingBrowser](const QString& recording) { recordingBrowser->append(recording); });
+
+        connect(cmdManager, &commandManager::recordingStarted, this,
+                [recordingBrowser]() { recordingBrowser->append(tr("=== Recording Started ===")); });
+
+        connect(cmdManager, &commandManager::recordingStopped, this,
+                [recordingBrowser]() { recordingBrowser->append(tr("=== Recording Stopped ===")); });
+
+        auto dockWidget = new QDockWidget(tr("Recording Browser"), this);
+        dockWidget->setWidget(recordWidget);
+        this->addDockWidget(Qt::RightDockWidgetArea, dockWidget);
+    }
 
     connect(model_.get(), &dataModel::dataChanged, this, &mainWindow::onDataChanged);
 

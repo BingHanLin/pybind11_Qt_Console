@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <utility>
+#include <vector>
 
 #include <pybind11/stl.h>
 
@@ -33,6 +34,56 @@ std::vector<std::string> pythonInterpreter::getPossibleMethods(const std::vector
 
         try
         {
+            {
+                auto module = pybind11::module_::import(testQueryMethodString.c_str());
+                // auto module = pybind11::module_::import("demo_commands.order_commands");
+                auto object = pybind11::object(module.attr("__dict__"));
+
+                const auto subModules = pybind11::eval(
+                                            R"(
+                            [name for name in dir() if __import__('importlib').import_module('inspect').ismodule(globals()[name])]
+                          )",
+                                            object)
+                                            .cast<std::vector<std::string>>();
+
+                const auto functions = pybind11::eval(
+                                           R"(
+                            [name for name in dir() if __import__('importlib').import_module('inspect').isroutine(globals()[name])]
+                          )",
+                                           object)
+                                           .cast<std::vector<std::string>>();
+
+                std::cout << "=========================" << std::endl;
+                std::cout << "testQueryMethodString: " << testQueryMethodString << std::endl;
+                if (!subModules.empty())
+                {
+                    std::cout << "module:" << std::endl;
+                    for (const auto& submodule : subModules)
+                    {
+                        std::cout << ">>>>>" << std::endl;
+
+                        std::cout << submodule << std::endl;
+
+                        auto obj = module.attr(submodule.c_str());
+                        std::cout << obj.doc().cast<std::string>() << std::endl;
+                    };
+                }
+
+                if (!functions.empty())
+                {
+                    std::cout << "function:" << std::endl;
+                    for (const auto& function : functions)
+                    {
+                        std::cout << ">>>>>" << std::endl;
+
+                        std::cout << function << std::endl;
+
+                        auto obj = module.attr(function.c_str());
+                        std::cout << obj.doc().cast<std::string>() << std::endl;
+                    };
+                }
+            }
+
             auto subCommands = pybind11::module_::import(testQueryMethodString.c_str());
             auto sub_locals = pybind11::dict(**subCommands.attr("__dict__"));
 
@@ -80,16 +131,20 @@ pythonInterpreter::pythonInterpreter(QObject* parent) : QObject(parent)
     )");
 
     auto demo_commands = pybind11::module_::import("demo_commands");
-    locals_ = pybind11::dict(**demo_commands.attr("__dict__"));
+    locals_ = demo_commands.attr("__dict__");
 }
 
 void pythonInterpreter::runCommand(const std::string& cmd) const
 {
     try
     {
-        emit commandInserted(QString::fromStdString(cmd));
+        emit pyCommandBeforeInserted(QString::fromStdString(cmd));
+
+        pyStdErrOutStreamRedirect redirect;
 
         pybind11::exec(cmd, pybind11::globals(), locals_);
+
+        emit pyCommandStdOutput(QString::fromStdString(redirect.stdoutString()));
     }
     catch (pybind11::error_already_set& e)
     {
@@ -98,7 +153,7 @@ void pythonInterpreter::runCommand(const std::string& cmd) const
             std::cout << "PyExc_ModuleNotFoundError" << std::endl;
         }
 
-        emit commandParsedWithError(QString::fromStdString(e.what()));
+        emit pyCommandParsedWithError(QString::fromStdString(e.what()));
 
         std::cout << e.what() << std::endl;
     }
