@@ -1,11 +1,16 @@
 #include <QAction>
+#include <QDockWidget>
 #include <QDoubleSpinBox>
+#include <QGroupBox>
 #include <QLabel>
 #include <QMenuBar>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QTextBrowser>
+#include <QToolButton>
 #include <QVBoxLayout>
+#include <qlineedit.h>
+#include <qnamespace.h>
 
 #include "commandManager.hpp"
 #include "commands.hpp"
@@ -32,26 +37,6 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 
     this->menuBar()->addAction(undoAction);
     this->menuBar()->addAction(redoAction);
-
-    auto onOffAction = new QAction(tr(" Record"), this);
-    onOffAction->setCheckable(true);
-    onOffAction->setChecked(true);
-    this->menuBar()->addAction(onOffAction);
-
-    connect(onOffAction, &QAction::toggled, this,
-            [onOffAction](bool checked)
-            {
-                if (checked)
-                {
-                    commandManager::getInstance()->startRecording();
-                    onOffAction->setText(tr(" Recording"));
-                }
-                else
-                {
-                    commandManager::getInstance()->stopRecording();
-                    onOffAction->setText(tr(" Record"));
-                }
-            });
 
     auto layout = new QVBoxLayout;
     layout->setSpacing(15);
@@ -91,6 +76,7 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         hlayout1->addWidget(amountEdit);
         hlayout1->addWidget(new QLabel(tr("Price: "), this));
         hlayout1->addWidget(priceEdit);
+        hlayout1->addStretch();
 
         auto hlayout2 = new QHBoxLayout;
         hlayout2->setContentsMargins(0, 0, 0, 0);
@@ -133,9 +119,15 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         hlayout2->addWidget(addOrderButton);
         hlayout2->addWidget(removeOrderButton);
         hlayout2->addWidget(updateOrderButton);
+        hlayout2->addStretch();
 
-        layout->addLayout(hlayout1);
-        layout->addLayout(hlayout2);
+        auto groupBox = new QGroupBox(tr("Order Operations"), this);
+        auto groupBoxLayout = new QVBoxLayout(groupBox);
+
+        groupBoxLayout->addLayout(hlayout1);
+        groupBoxLayout->addLayout(hlayout2);
+
+        layout->addWidget(groupBox);
     }
 
     {
@@ -144,23 +136,53 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         connect(redoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Redo.")); });
         connect(model_.get(), &dataModel::messageEmerged, console, &pythonConsole::onMessagePassedIn);
 
-        layout->addWidget(console);
+        auto dockWidget = new QDockWidget(tr("Python Console"), this);
+        dockWidget->setWidget(console);
+        this->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
     }
 
     {
+        auto recordWidget = new QWidget(this);
+        auto recordWidgetLayout = new QVBoxLayout(recordWidget);
+        recordWidgetLayout->setContentsMargins(9, 9, 9, 9);
+
+        auto recordBtn = new QToolButton(this);
+        recordBtn->setText(tr("Start Record"));
+        recordBtn->setCheckable(true);
+        recordBtn->setChecked(false);
+        recordWidgetLayout->addWidget(recordBtn);
+
         auto recordingBrowser = new QTextBrowser(this);
+        recordWidgetLayout->addWidget(recordingBrowser);
+
+        connect(recordBtn, &QToolButton::toggled, this,
+                [recordBtn, recordingBrowser](bool checked)
+                {
+                    if (checked)
+                    {
+                        commandManager::getInstance()->startRecording();
+                        recordBtn->setText(tr("Stop Record"));
+                    }
+                    else
+                    {
+                        commandManager::getInstance()->stopRecording();
+                        recordBtn->setText(tr("Start Record"));
+                    }
+                });
 
         connect(cmdManager, &commandManager::recordingInserted, this,
                 [recordingBrowser](const QString& recording) { recordingBrowser->append(recording); });
 
         connect(cmdManager, &commandManager::recordingStarted, this,
-                [recordingBrowser]() { recordingBrowser->clear(); });
+                [recordingBrowser]() { recordingBrowser->append(tr("=== Recording Started ===")); });
 
-        layout->addWidget(recordingBrowser);
+        connect(cmdManager, &commandManager::recordingStopped, this,
+                [recordingBrowser]() { recordingBrowser->append(tr("=== Recording Stopped ===")); });
+
+        auto dockWidget = new QDockWidget(tr("Recording Browser"), this);
+        dockWidget->setWidget(recordWidget);
+        this->addDockWidget(Qt::RightDockWidgetArea, dockWidget);
     }
-
-    layout->setStretch(0, 2);
-    layout->setStretch(1, 1);
 
     connect(model_.get(), &dataModel::dataChanged, this, &mainWindow::onDataChanged);
 

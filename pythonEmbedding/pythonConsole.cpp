@@ -18,9 +18,8 @@ pythonConsole::pythonConsole(QWidget* parent) : QWidget(parent), outputTextEdit_
     auto commandLine = new pythonCommandLine(interpreter, this);
 
     auto layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(9, 9, 9, 9);
 
-    layout->addWidget(new QLabel(tr("Console")));
     layout->addWidget(outputTextEdit_);
     layout->addWidget(commandLine);
     layout->setStretch(0, 1);
