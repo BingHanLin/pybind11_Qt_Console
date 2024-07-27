@@ -5,12 +5,7 @@
 
 #include <QObject>
 
-struct order
-{
-    int id_;
-    int amount_;
-    double price_;
-};
+#include "order.hpp"
 
 class dataModel : public QObject
 {

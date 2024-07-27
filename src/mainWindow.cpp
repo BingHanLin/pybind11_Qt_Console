@@ -1,6 +1,7 @@
 #include <QAction>
 #include <QDockWidget>
 #include <QDoubleSpinBox>
+#include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
 #include <QMenuBar>
@@ -63,23 +64,19 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     }
 
     {
-        auto hlayout1 = new QHBoxLayout;
-        hlayout1->setContentsMargins(0, 0, 0, 0);
+        auto formLayout = new QFormLayout;
+        formLayout->setContentsMargins(0, 0, 0, 0);
 
         auto idEdit = new QSpinBox(this);
         auto amountEdit = new QSpinBox(this);
         auto priceEdit = new QDoubleSpinBox(this);
 
-        hlayout1->addWidget(new QLabel(tr("ID: "), this));
-        hlayout1->addWidget(idEdit);
-        hlayout1->addWidget(new QLabel(tr("Amount: "), this));
-        hlayout1->addWidget(amountEdit);
-        hlayout1->addWidget(new QLabel(tr("Price: "), this));
-        hlayout1->addWidget(priceEdit);
-        hlayout1->addStretch();
+        formLayout->addRow(new QLabel(tr("ID: ")), idEdit);
+        formLayout->addRow(new QLabel(tr("Amount: ")), amountEdit);
+        formLayout->addRow(new QLabel(tr("Price: ")), priceEdit);
 
-        auto hlayout2 = new QHBoxLayout;
-        hlayout2->setContentsMargins(0, 0, 0, 0);
+        auto hlayout = new QHBoxLayout;
+        hlayout->setContentsMargins(0, 0, 0, 0);
 
         auto addOrderButton = new QPushButton(tr("Add Order"), this);
         auto removeOrderButton = new QPushButton(tr("Remove Order"), this);
@@ -116,16 +113,16 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
                     cmdManager->runCommand(command);
                 });
 
-        hlayout2->addWidget(addOrderButton);
-        hlayout2->addWidget(removeOrderButton);
-        hlayout2->addWidget(updateOrderButton);
-        hlayout2->addStretch();
+        hlayout->addWidget(addOrderButton);
+        hlayout->addWidget(removeOrderButton);
+        hlayout->addWidget(updateOrderButton);
+        hlayout->addStretch();
 
         auto groupBox = new QGroupBox(tr("Order Operations"), this);
         auto groupBoxLayout = new QVBoxLayout(groupBox);
 
-        groupBoxLayout->addLayout(hlayout1);
-        groupBoxLayout->addLayout(hlayout2);
+        groupBoxLayout->addLayout(formLayout);
+        groupBoxLayout->addLayout(hlayout);
 
         layout->addWidget(groupBox);
     }
