@@ -2,7 +2,7 @@
 
 #include <QMainWindow>
 #include <QObject>
-#include <QTableWidget>
+#include <QTreeWidget>
 
 #include "dataModel.hpp"
 #include "pythonInterpreter.hpp"
@@ -15,7 +15,7 @@ class mainWindow : public QMainWindow
 
   private:
     std::shared_ptr<dataModel> model_;
-    QTableWidget* table_;
+    QTreeWidget* tree_;
 
   private slots:
     void onDataChanged();

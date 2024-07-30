@@ -7,6 +7,7 @@
 
 #include "commandManager.hpp"
 #include "dataModel.hpp"
+#include "order.hpp"
 
 class baseCommand : public QUndoCommand
 {
@@ -113,7 +114,7 @@ class removeCommand : public baseCommand
 class updateCommand : public baseCommand
 {
   public:
-    using scriptCallbackType = std::function<std::string(int, int, double)>;
+    using scriptCallbackType = std::function<std::string(const std::shared_ptr<order> &oneOrder, int, double)>;
     static void setScriptCallback(scriptCallbackType callback)
     {
         scriptCallback_ = std::move(callback);
@@ -132,23 +133,22 @@ class updateCommand : public baseCommand
 
     void redo() override
     {
-        auto oldOrder = model_->getOrder(id_);
-
-        if (oldOrder == nullptr)
+        auto oneOrder = model_->getOrder(id_);
+        if (oneOrder == nullptr)
         {
             this->setObsolete(true);
             return;
         }
 
-        oldAmount_ = oldOrder->amount_;
-        oldPrice_ = oldOrder->price_;
+        oldAmount_ = oneOrder->amount_;
+        oldPrice_ = oneOrder->price_;
 
         const auto result = model_->updateOrder(id_, newAmount_, newPrice_);
         this->setObsolete(!result);
 
         if (result && isFirstTime_ && commandManager::getInstance()->isRecoring())
         {
-            const auto record = scriptCallback_(id_, newAmount_, newPrice_);
+            const auto record = scriptCallback_(oneOrder, newAmount_, newPrice_);
             commandManager::getInstance()->insertRecording(QString::fromStdString(record));
 
             isFirstTime_ = false;

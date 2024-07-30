@@ -6,6 +6,7 @@
 #include <QObject>
 
 #include "order.hpp"
+#include "root.hpp"
 
 class dataModel : public QObject
 {
@@ -13,6 +14,11 @@ class dataModel : public QObject
   public:
     dataModel();
     ~dataModel() override = default;
+
+    [[nodiscard]] std::shared_ptr<root> getRoot() const
+    {
+        return root_;
+    }
 
     bool addOrder(const std::shared_ptr<order>& o);
 
@@ -40,5 +46,6 @@ class dataModel : public QObject
     void messageEmerged(const QString& message);
 
   private:
+    std::shared_ptr<root> root_;
     std::map<int, std::shared_ptr<order>> orders_;
 };

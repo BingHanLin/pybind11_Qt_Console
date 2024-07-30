@@ -1,70 +1,45 @@
-# pybind11 Qt Console
+# trace generated using paraview version 5.11.0
+#import paraview
+#paraview.compatibility.major = 5
+#paraview.compatibility.minor = 11
 
-## Overview
+#### import the simple module from the paraview
+from paraview.simple import *
+#### disable automatic camera reset on 'Show'
+paraview.simple._DisableFirstRenderCameraReset()
 
-This project embeds a Python console into Qt using the pybind11 package. The Python console includes simple auto-completion capabilities and integrates with an undo/redo framework.
+# get active source.
+teststl = GetActiveSource()
 
-![](./asset/image.png)
+# destroy teststl
+Delete(teststl)
+del teststl
 
-## Features
+# get active view
+renderView1 = GetActiveViewOrCreate('RenderView')
 
-* Python Console Integration: Incorporate a Python console into your Qt application, enabling direct interaction with Python code.
+#================================================================
+# addendum: following script captures some of the application
+# state to faithfully reproduce the visualization during playback
+#================================================================
 
-* Auto-Completion: Provide context-aware suggestions as the user types.
+# get layout
+layout1 = GetLayout()
 
-* Undo/Redo Framework: Support reverting and restoring changes.
+#--------------------------------
+# saving layout sizes for layouts
 
-* MIT License for easy integration into your own projects.
+# layout/tab size in pixels
+layout1.SetSize(870, 565)
 
-## Structure
+#-----------------------------------
+# saving camera placements for views
 
-The core code resides in the **pythonEmbedding** folder, which is an independent target in the CMakeLists.txt script.
+# current camera placement for renderView1
+renderView1.CameraPosition = [0.0, 0.0, 33.46065214951232]
+renderView1.CameraParallelScale = 8.660254037844387
 
-The communication bridge between Python scripts and C++ codes is built in the **pythonCommands.cpp** file. It defines the available Python modules and methods using pybind11 embedding functions, facilitating easy interaction between Python and C++ functionalities.
-
-## Usage
-1. **Prepare pybind11 environment**
-
-    Set up a Python virtual environment, naming it **pybind11-env**.
-    ```bash
-    python -m venv pybind11-env
-    ```
-    After the virtual environment is created, you can activate it. On Windows, you can activate it with:
-    ```bash
-    .\pybind11-env\Scripts\activate
-    ```
-    After activation, use the following command to install the necessary package:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-2. **Configure CMakePresets.json**
-    Change the value of `Qt5_DIR` and `Qt5_BIN_DIR` in the **CMakePresets.json** to match your environment.
-
-3. **Build project**
-    Build the project with the following commands.
-    ```bash
-    cmake --preset MSVC_x64-release
-    ```
-    ```bash
-    cmake --build --preset MSVC_x64-release
-    ``` 
-
-    ```bash
-    cmake --install build/release/MSVC_x64-release
-    ``` 
-4. Find the executable under the **bin** folder.
-
-## License
-This project is licensed under the MIT License - see the [LICENSE](https://opensource.org/license/mit/) file for details.
-
-## Contributions
-Contributions to this project are welcome. Please feel free to submit issues or pull requests to improve the functionality or fix any bugs.
-
-## Reference
-1. [Qt Completer](https://doc.qt.io/qt-5/qtwidgets-tools-customcompleter-example.html)
-1. [avogadro pythonterminal.cpp](https://github.com/cryos/avogadro/blob/master/libavogadro/src/extensions/pythonterminal.cpp)
-1. [pybind11: Embedding the interpreter](https://pybind11.readthedocs.io/en/latest/advanced/embedding.html)
-1. [QPyConsole](https://github.com/roozbehg/QPyConsole)
-1. [Creating a Scripting Egnine with pybind11. Step by step.](https://github.com/aoloe/cpp-pybind11-playground)
-1. [QtCpp-PythonConsole](https://github.com/kaiware0x/QtCpp-PythonConsole)
+#--------------------------------------------
+# uncomment the following to render all views
+# RenderAllViews()
+# alternatively, if you want to write images, you can use SaveScreenshot(...).

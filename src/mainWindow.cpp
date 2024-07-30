@@ -10,6 +10,7 @@
 #include <QTextBrowser>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <memory>
 #include <qlineedit.h>
 #include <qnamespace.h>
 
@@ -17,6 +18,7 @@
 #include "commands.hpp"
 #include "dataModel.hpp"
 #include "mainWindow.hpp"
+#include "order.hpp"
 #include "pythonCommands.hpp"
 #include "pythonConsole.hpp"
 
@@ -52,16 +54,15 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     pythonCommands::setDataModel(model_);
 
     {
-        table_ = new QTableWidget(this);
-        table_->setAlternatingRowColors(true);
+        tree_ = new QTreeWidget(this);
+        tree_->setAlternatingRowColors(true);
 
         QStringList headers;
-        headers << tr("ID") << tr("Amount") << tr("Price");
-        table_->setColumnCount(headers.size());
-        table_->setHorizontalHeaderLabels(headers);
-        table_->resizeRowsToContents();
+        headers << tr("Object") << tr("Amount") << tr("Price");
+        tree_->setHeaderLabels(headers);
+        tree_->setColumnCount(headers.size());
 
-        layout->addWidget(table_);
+        layout->addWidget(tree_);
     }
 
     {
@@ -86,7 +87,8 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         connect(addOrderButton, &QPushButton::clicked, this,
                 [idEdit, amountEdit, priceEdit]()
                 {
-                    auto newOrder = std::make_shared<order>(idEdit->value(), amountEdit->value(), priceEdit->value());
+                    auto newOrder =
+                        std::make_shared<order>("New Order", idEdit->value(), amountEdit->value(), priceEdit->value());
 
                     auto command = new addCommand(pythonCommands::model_, newOrder);
 
@@ -188,18 +190,26 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 
 void mainWindow::onDataChanged()
 {
-    const auto orders = model_->orders();
-
-    table_->clearContents();
-    table_->setRowCount((int)orders.size());
+    tree_->clear();
 
     int counter = 0;
-    for (const auto& [id, order] : orders)
+    const auto root = model_->getRoot();
+    for (const auto& oneGroup : root->getChildren())
     {
-        table_->setItem(counter, 0, new QTableWidgetItem(QString::number(order->id_)));
-        table_->setItem(counter, 1, new QTableWidgetItem(QString::number(order->amount_)));
-        table_->setItem(counter, 2, new QTableWidgetItem(QString::number(order->price_)));
+        auto groupItem = new QTreeWidgetItem(tree_, QStringList() << QString::fromStdString(oneGroup->getName()));
+        tree_->addTopLevelItem(groupItem);
 
-        counter++;
+        for (const auto& oneOrderObject : oneGroup->getChildren())
+        {
+            auto oneOrder = std::dynamic_pointer_cast<order>(oneOrderObject);
+
+            auto orderItem = new QTreeWidgetItem(groupItem, QStringList() << QString::fromStdString(oneOrder->getName())
+                                                                          << QString::number(oneOrder->getAmount())
+                                                                          << QString::number(oneOrder->getPrice()));
+
+            groupItem->addChild(orderItem);
+        }
     }
+
+    tree_->expandAll();
 }

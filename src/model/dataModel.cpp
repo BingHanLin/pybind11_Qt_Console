@@ -1,16 +1,18 @@
 #include "dataModel.hpp"
 #include <memory>
 
-dataModel::dataModel()
+dataModel::dataModel() : root_(std::make_shared<root>())
 {
-    auto o1 = std::make_shared<order>(1, 5, 10.0);
-    orders_.insert({o1->id_, o1});
+    auto g1 = std::make_shared<group>("Group1");
+    root_->addGroup(g1);
 
-    auto o2 = std::make_shared<order>(2, 6, 12.0);
-    orders_.insert({o2->id_, o2});
+    {
+        auto o1 = std::make_shared<order>("Order1", 1, 5, 10.0);
+        g1->addOrder(o1);
 
-    auto o3 = std::make_shared<order>(3, 9, 15.0);
-    orders_.insert({o3->id_, o3});
+        auto o2 = std::make_shared<order>("Order2", 2, 6, 12.0);
+        g1->addOrder(o2);
+    }
 }
 
 bool dataModel::addOrder(const std::shared_ptr<order>& o)
