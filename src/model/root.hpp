@@ -6,7 +6,7 @@
 class root : public object
 {
   public:
-    explicit root() : object("Root"){};
+    explicit root() : object("Root", nullptr){};
     ~root() = default;
 
     [[nodiscard]] std::vector<std::shared_ptr<object>> getChildren() const override

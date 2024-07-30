@@ -1,7 +1,7 @@
 #include "commands.hpp"
 
-addCommand::scriptCallbackType addCommand::scriptCallback_ = nullptr;
+addOrderCommand::scriptCallbackType addOrderCommand::scriptCallback_ = nullptr;
 
-removeCommand::scriptCallbackType removeCommand::scriptCallback_ = nullptr;
+removeOrderCommand::scriptCallbackType removeOrderCommand::scriptCallback_ = nullptr;
 
-updateCommand::scriptCallbackType updateCommand::scriptCallback_ = nullptr;
+updateOrderCommand::scriptCallbackType updateOrderCommand::scriptCallback_ = nullptr;

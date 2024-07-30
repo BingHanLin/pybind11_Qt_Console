@@ -7,7 +7,7 @@
 class object
 {
   public:
-    explicit object(const std::string& name) : name_(name){};
+    explicit object(const std::string& name, object* parent) : parent_(parent), name_(name){};
     ~object() = default;
 
     [[nodiscard]] object* getParent() const
@@ -36,6 +36,6 @@ class object
     }
 
   private:
-    object* parent_ = nullptr;
+    object* parent_;
     std::string name_;
 };

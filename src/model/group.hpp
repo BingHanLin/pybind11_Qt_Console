@@ -6,7 +6,7 @@
 class group : public object
 {
   public:
-    explicit group(const std::string& name) : object(name){};
+    explicit group(const std::string& name, object* parent) : object(name, parent){};
     ~group() = default;
 
     [[nodiscard]] std::vector<std::shared_ptr<object>> getChildren() const override

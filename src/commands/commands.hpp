@@ -7,6 +7,7 @@
 
 #include "commandManager.hpp"
 #include "dataModel.hpp"
+#include "group.hpp"
 #include "order.hpp"
 
 class baseCommand : public QUndoCommand
@@ -22,10 +23,10 @@ class baseCommand : public QUndoCommand
     bool isFirstTime_;
 };
 
-class addCommand : public baseCommand
+class addOrderCommand : public baseCommand
 {
   public:
-    using scriptCallbackType = std::function<std::string(int, int, double)>;
+    using scriptCallbackType = std::function<std::string(const std::shared_ptr<group> &, int, double)>;
     static void setScriptCallback(scriptCallbackType callback)
     {
         scriptCallback_ = std::move(callback);
@@ -36,21 +37,22 @@ class addCommand : public baseCommand
     static scriptCallbackType scriptCallback_;
 
   public:
-    explicit addCommand(std::shared_ptr<dataModel> model, std::shared_ptr<order> newOrder)
-        : baseCommand(std::move(model), QObject::tr("Add Order")), newOrder_(std::move(newOrder))
+    explicit addOrderCommand(std::shared_ptr<dataModel> model, const std::shared_ptr<group> &oneGroup,
+                             const std::shared_ptr<order> &newOrder)
+        : baseCommand(std::move(model), QObject::tr("Add Order")), group_(oneGroup), newOrder_(newOrder)
     {
     }
 
-    ~addCommand() override = default;
+    ~addOrderCommand() override = default;
 
     void redo() override
     {
-        const auto result = model_->addOrder(newOrder_);
-        this->setObsolete(!result);
+        group_->addOrder(newOrder_);
+        emit model_->dataChanged();
 
-        if (result && isFirstTime_ && commandManager::getInstance()->isRecoring())
+        if (isFirstTime_ && commandManager::getInstance()->isRecoring())
         {
-            const auto record = scriptCallback_(newOrder_->id_, newOrder_->amount_, newOrder_->price_);
+            const auto record = scriptCallback_(group_, newOrder_->amount_, newOrder_->price_);
             commandManager::getInstance()->insertRecording(QString::fromStdString(record));
 
             isFirstTime_ = false;
@@ -59,17 +61,20 @@ class addCommand : public baseCommand
 
     void undo() override
     {
-        model_->removeOrder(newOrder_->id_);
+        group_->removeOrder(newOrder_);
+        emit model_->dataChanged();
     }
 
   private:
-    std::shared_ptr<order> newOrder_;
+    const std::shared_ptr<group> group_;
+    const std::shared_ptr<order> newOrder_;
 };
 
-class removeCommand : public baseCommand
+class removeOrderCommand : public baseCommand
 {
   public:
-    using scriptCallbackType = std::function<std::string(int)>;
+    using scriptCallbackType =
+        std::function<std::string(const std::shared_ptr<group> &, const std::shared_ptr<order> &)>;
     static void setScriptCallback(scriptCallbackType callback)
     {
         scriptCallback_ = std::move(callback);
@@ -79,22 +84,22 @@ class removeCommand : public baseCommand
     static scriptCallbackType scriptCallback_;
 
   public:
-    explicit removeCommand(std::shared_ptr<dataModel> model, const int id)
-        : baseCommand(std::move(model), QObject::tr("Remove Order")), id_(id), removedOrder_(nullptr)
+    explicit removeOrderCommand(std::shared_ptr<dataModel> model, const std::shared_ptr<group> &oneGroup,
+                                const std::shared_ptr<order> &oneOrder)
+        : baseCommand(std::move(model), QObject::tr("Remove Order")), group_(oneGroup), order_(oneOrder)
     {
     }
 
-    ~removeCommand() override = default;
+    ~removeOrderCommand() override = default;
 
     void redo() override
     {
-        removedOrder_ = model_->getOrder(id_);
-        const auto result = model_->removeOrder(id_);
-        this->setObsolete(!result);
+        group_->removeOrder(order_);
+        emit model_->dataChanged();
 
-        if (result && isFirstTime_ && commandManager::getInstance()->isRecoring())
+        if (isFirstTime_ && commandManager::getInstance()->isRecoring())
         {
-            const auto record = scriptCallback_(id_);
+            const auto record = scriptCallback_(group_, order_);
             commandManager::getInstance()->insertRecording(QString::fromStdString(record));
 
             isFirstTime_ = false;
@@ -103,15 +108,16 @@ class removeCommand : public baseCommand
 
     void undo() override
     {
-        model_->addOrder(removedOrder_);
+        group_->addOrder(order_);
+        emit model_->dataChanged();
     }
 
   private:
-    const int id_;
-    std::shared_ptr<order> removedOrder_;
+    const std::shared_ptr<group> group_;
+    const std::shared_ptr<order> order_;
 };
 
-class updateCommand : public baseCommand
+class updateOrderCommand : public baseCommand
 {
   public:
     using scriptCallbackType = std::function<std::string(const std::shared_ptr<order> &oneOrder, int, double)>;
@@ -124,31 +130,31 @@ class updateCommand : public baseCommand
     static scriptCallbackType scriptCallback_;
 
   public:
-    explicit updateCommand(std::shared_ptr<dataModel> model, const int id, const int amount, const double price)
-        : baseCommand(std::move(model), QObject::tr("Update Order")), id_(id), newAmount_(amount), newPrice_(price)
+    explicit updateOrderCommand(const std::shared_ptr<dataModel> &model, const std::shared_ptr<order> &oneOrder,
+                                const int amount, const double price)
+        : baseCommand(model, QObject::tr("Update Order")), order_(oneOrder), newAmount_(amount), newPrice_(price)
     {
     }
 
-    ~updateCommand() override = default;
+    ~updateOrderCommand() override = default;
 
     void redo() override
     {
-        auto oneOrder = model_->getOrder(id_);
-        if (oneOrder == nullptr)
+        if (order_ == nullptr)
         {
             this->setObsolete(true);
             return;
         }
 
-        oldAmount_ = oneOrder->amount_;
-        oldPrice_ = oneOrder->price_;
+        oldAmount_ = order_->amount_;
+        oldPrice_ = order_->price_;
+        order_->amount_ = newAmount_;
+        order_->price_ = newPrice_;
+        emit model_->dataChanged();
 
-        const auto result = model_->updateOrder(id_, newAmount_, newPrice_);
-        this->setObsolete(!result);
-
-        if (result && isFirstTime_ && commandManager::getInstance()->isRecoring())
+        if (isFirstTime_ && commandManager::getInstance()->isRecoring())
         {
-            const auto record = scriptCallback_(oneOrder, newAmount_, newPrice_);
+            const auto record = scriptCallback_(order_, newAmount_, newPrice_);
             commandManager::getInstance()->insertRecording(QString::fromStdString(record));
 
             isFirstTime_ = false;
@@ -157,11 +163,13 @@ class updateCommand : public baseCommand
 
     void undo() override
     {
-        model_->updateOrder(id_, oldAmount_, oldPrice_);
+        order_->amount_ = oldAmount_;
+        order_->price_ = oldPrice_;
+        emit model_->dataChanged();
     }
 
   private:
-    const int id_;
+    const std::shared_ptr<order> order_;
     const int newAmount_;
     const double newPrice_;
 

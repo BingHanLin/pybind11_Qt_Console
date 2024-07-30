@@ -5,6 +5,7 @@
 #include <QGroupBox>
 #include <QLabel>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QTextBrowser>
@@ -13,14 +14,20 @@
 #include <memory>
 #include <qlineedit.h>
 #include <qnamespace.h>
+#include <qvariant.h>
 
 #include "commandManager.hpp"
 #include "commands.hpp"
 #include "dataModel.hpp"
+#include "group.hpp"
 #include "mainWindow.hpp"
 #include "order.hpp"
 #include "pythonCommands.hpp"
 #include "pythonConsole.hpp"
+
+Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
+Q_DECLARE_METATYPE(std::shared_ptr<group>)
+Q_DECLARE_METATYPE(std::shared_ptr<order>)
 
 mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 {
@@ -69,11 +76,9 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         auto formLayout = new QFormLayout;
         formLayout->setContentsMargins(0, 0, 0, 0);
 
-        auto idEdit = new QSpinBox(this);
         auto amountEdit = new QSpinBox(this);
         auto priceEdit = new QDoubleSpinBox(this);
 
-        formLayout->addRow(new QLabel(tr("ID: ")), idEdit);
         formLayout->addRow(new QLabel(tr("Amount: ")), amountEdit);
         formLayout->addRow(new QLabel(tr("Price: ")), priceEdit);
 
@@ -85,34 +90,64 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         auto updateOrderButton = new QPushButton(tr("Update Order"), this);
 
         connect(addOrderButton, &QPushButton::clicked, this,
-                [idEdit, amountEdit, priceEdit]()
+                [this, amountEdit, priceEdit]()
                 {
-                    auto newOrder =
-                        std::make_shared<order>("New Order", idEdit->value(), amountEdit->value(), priceEdit->value());
+                    const auto oneGroup = tree_->currentItem()->data(0, Qt::UserRole).value<std::shared_ptr<group>>();
 
-                    auto command = new addCommand(pythonCommands::model_, newOrder);
+                    if (oneGroup != nullptr)
+                    {
+                        auto newOrder = std::make_shared<order>("New Order", amountEdit->value(), priceEdit->value(),
+                                                                oneGroup.get());
 
-                    auto cmdManager = commandManager::getInstance();
-                    cmdManager->runCommand(command);
+                        auto command = new addOrderCommand(pythonCommands::model_, oneGroup, newOrder);
+
+                        auto cmdManager = commandManager::getInstance();
+                        cmdManager->runCommand(command);
+                    }
+                    else
+                    {
+                        QMessageBox::warning(this, tr("Warning"), tr("Please select an group to add."));
+                    }
                 });
 
         connect(removeOrderButton, &QPushButton::clicked, this,
-                [idEdit]()
+                [this]()
                 {
-                    auto command = new removeCommand(pythonCommands::model_, idEdit->value());
+                    const auto oneOrder = tree_->currentItem()->data(0, Qt::UserRole).value<std::shared_ptr<order>>();
 
-                    auto cmdManager = commandManager::getInstance();
-                    cmdManager->runCommand(command);
+                    if (oneOrder != nullptr)
+                    {
+                        const auto oneGroup =
+                            tree_->currentItem()->parent()->data(0, Qt::UserRole).value<std::shared_ptr<group>>();
+
+                        auto command = new removeOrderCommand(model_, oneGroup, oneOrder);
+
+                        auto cmdManager = commandManager::getInstance();
+                        cmdManager->runCommand(command);
+                    }
+                    else
+                    {
+                        QMessageBox::warning(this, tr("Warning"), tr("Please select an order to remove."));
+                    }
                 });
 
         connect(updateOrderButton, &QPushButton::clicked, this,
-                [idEdit, amountEdit, priceEdit]()
+                [this, amountEdit, priceEdit]()
                 {
-                    auto command = new updateCommand(pythonCommands::model_, idEdit->value(), amountEdit->value(),
-                                                     priceEdit->value());
+                    const auto oneOrder = tree_->currentItem()->data(0, Qt::UserRole).value<std::shared_ptr<order>>();
 
-                    auto cmdManager = commandManager::getInstance();
-                    cmdManager->runCommand(command);
+                    if (oneOrder != nullptr)
+                    {
+                        auto command =
+                            new updateOrderCommand(model_, oneOrder, amountEdit->value(), priceEdit->value());
+
+                        auto cmdManager = commandManager::getInstance();
+                        cmdManager->runCommand(command);
+                    }
+                    else
+                    {
+                        QMessageBox::warning(this, tr("Warning"), tr("Please select an order to update."));
+                    }
                 });
 
         hlayout->addWidget(addOrderButton);
@@ -173,10 +208,10 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
                 [recordingBrowser](const QString& recording) { recordingBrowser->append(recording); });
 
         connect(cmdManager, &commandManager::recordingStarted, this,
-                [recordingBrowser]() { recordingBrowser->append(tr("=== Recording Started ===")); });
+                [recordingBrowser]() { recordingBrowser->append(tr("# === Recording Started ===")); });
 
         connect(cmdManager, &commandManager::recordingStopped, this,
-                [recordingBrowser]() { recordingBrowser->append(tr("=== Recording Stopped ===")); });
+                [recordingBrowser]() { recordingBrowser->append(tr("# === Recording Stopped ===")); });
 
         auto dockWidget = new QDockWidget(tr("Recording Browser"), this);
         dockWidget->setWidget(recordWidget);
@@ -194,9 +229,12 @@ void mainWindow::onDataChanged()
 
     int counter = 0;
     const auto root = model_->getRoot();
-    for (const auto& oneGroup : root->getChildren())
+    for (const auto& oneGroupObject : root->getChildren())
     {
-        auto groupItem = new QTreeWidgetItem(tree_, QStringList() << QString::fromStdString(oneGroup->getName()));
+        auto groupItem = new QTreeWidgetItem(tree_, QStringList() << QString::fromStdString(oneGroupObject->getName()));
+        auto oneGroup = std::dynamic_pointer_cast<group>(oneGroupObject);
+        groupItem->setData(0, Qt::UserRole, QVariant::fromValue(oneGroup));
+
         tree_->addTopLevelItem(groupItem);
 
         for (const auto& oneOrderObject : oneGroup->getChildren())
@@ -206,6 +244,7 @@ void mainWindow::onDataChanged()
             auto orderItem = new QTreeWidgetItem(groupItem, QStringList() << QString::fromStdString(oneOrder->getName())
                                                                           << QString::number(oneOrder->getAmount())
                                                                           << QString::number(oneOrder->getPrice()));
+            orderItem->setData(0, Qt::UserRole, QVariant::fromValue(oneOrder));
 
             groupItem->addChild(orderItem);
         }
