@@ -34,7 +34,7 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     this->setWindowTitle(tr("pybind11 Qt Console"));
 
     auto cmdManager = commandManager::getInstance();
-    cmdManager->setMaxCommandNumber(1);
+    cmdManager->setMaxCommandNumber(10);
 
     auto undoAction = cmdManager->createUndoAction(this, tr("&Undo"));
     undoAction->setShortcut(QKeySequence::Undo);

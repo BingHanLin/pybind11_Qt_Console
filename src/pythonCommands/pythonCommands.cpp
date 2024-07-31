@@ -45,20 +45,20 @@ PYBIND11_EMBEDDED_MODULE(root_module, root_var)
             pybind11::return_value_policy::reference, "Get model root.");
     }
 
-    pybind11::class_<object>(root_var, "object")
+    pybind11::class_<object, std::shared_ptr<object>>(root_var, "object")
         .def("__repr__", [](const object& o) { return "<object: name " + o.getName() + ">"; })
         .def(
             "findChild",
             [](const object& o, const std::string& name) -> std::shared_ptr<object> { return o.findChild(name); },
             pybind11::return_value_policy::reference, "Find child object by name.", pybind11::arg("name"));
 
-    pybind11::class_<root, object>(root_var, "root")
+    pybind11::class_<root, object, std::shared_ptr<root>>(root_var, "root")
         .def("__repr__", [](const object& o) { return "<root: name " + o.getName() + ">"; });
 
-    pybind11::class_<group, object>(root_var, "group")
+    pybind11::class_<group, object, std::shared_ptr<group>>(root_var, "group")
         .def("__repr__", [](const object& o) { return "<group: name " + o.getName() + ">"; });
 
-    pybind11::class_<order, object>(root_var, "order")
+    pybind11::class_<order, object, std::shared_ptr<order>>(root_var, "order")
         .def("__repr__", [](const object& o) { return "<order: name " + o.getName() + ">"; });
 
     pybind11::module_ order_commands = root_var.def_submodule("order_commands", "A submodule of root_module");
