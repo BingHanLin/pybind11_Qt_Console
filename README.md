@@ -68,3 +68,5 @@ Contributions to this project are welcome. Please feel free to submit issues or 
 1. [QPyConsole](https://github.com/roozbehg/QPyConsole)
 1. [Creating a Scripting Egnine with pybind11. Step by step.](https://github.com/aoloe/cpp-pybind11-playground)
 1. [QtCpp-PythonConsole](https://github.com/kaiware0x/QtCpp-PythonConsole)
+1. [QGIS/python/console](https://github.com/qgis/QGIS/tree/master/python/console)
+1. [A Qt Console for IPython](https://ipython.org/ipython-doc/dev/interactive/qtconsole.html)

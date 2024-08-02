@@ -9,7 +9,7 @@
 
 std::vector<std::string> pythonInterpreter::getPossibleMethods(const std::vector<std::string>& queryVec)
 {
-    std::vector<std::string> fullQueryVec{"demo_commands"};
+    std::vector<std::string> fullQueryVec{"root_module"};
     fullQueryVec.insert(fullQueryVec.end(), queryVec.begin(), queryVec.end());
 
     std::vector<std::string> results;
@@ -36,7 +36,7 @@ std::vector<std::string> pythonInterpreter::getPossibleMethods(const std::vector
         {
             {
                 auto module = pybind11::module_::import(testQueryMethodString.c_str());
-                // auto module = pybind11::module_::import("demo_commands.order_commands");
+                // auto module = pybind11::module_::import("root_module.order_commands");
                 auto object = pybind11::object(module.attr("__dict__"));
 
                 const auto subModules = pybind11::eval(
@@ -130,8 +130,8 @@ pythonInterpreter::pythonInterpreter(QObject* parent) : QObject(parent)
         print(message)
     )");
 
-    auto demo_commands = pybind11::module_::import("demo_commands");
-    locals_ = demo_commands.attr("__dict__");
+    auto root_module = pybind11::module_::import("root_module");
+    locals_ = root_module.attr("__dict__");
 }
 
 void pythonInterpreter::runCommand(const std::string& cmd) const

@@ -5,27 +5,36 @@
 #include <QGroupBox>
 #include <QLabel>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QTextBrowser>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <memory>
 #include <qlineedit.h>
 #include <qnamespace.h>
+#include <qvariant.h>
 
 #include "commandManager.hpp"
 #include "commands.hpp"
 #include "dataModel.hpp"
+#include "group.hpp"
 #include "mainWindow.hpp"
+#include "order.hpp"
 #include "pythonCommands.hpp"
 #include "pythonConsole.hpp"
+
+Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
+Q_DECLARE_METATYPE(std::shared_ptr<group>)
+Q_DECLARE_METATYPE(std::shared_ptr<order>)
 
 mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 {
     this->setWindowTitle(tr("pybind11 Qt Console"));
 
     auto cmdManager = commandManager::getInstance();
-    cmdManager->setMaxCommandNumber(1);
+    cmdManager->setMaxCommandNumber(10);
 
     auto undoAction = cmdManager->createUndoAction(this, tr("&Undo"));
     undoAction->setShortcut(QKeySequence::Undo);
@@ -52,27 +61,24 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     pythonCommands::setDataModel(model_);
 
     {
-        table_ = new QTableWidget(this);
-        table_->setAlternatingRowColors(true);
+        tree_ = new QTreeWidget(this);
+        tree_->setAlternatingRowColors(true);
 
         QStringList headers;
-        headers << tr("ID") << tr("Amount") << tr("Price");
-        table_->setColumnCount(headers.size());
-        table_->setHorizontalHeaderLabels(headers);
-        table_->resizeRowsToContents();
+        headers << tr("Object") << tr("Amount") << tr("Price");
+        tree_->setHeaderLabels(headers);
+        tree_->setColumnCount(headers.size());
 
-        layout->addWidget(table_);
+        layout->addWidget(tree_);
     }
 
     {
         auto formLayout = new QFormLayout;
         formLayout->setContentsMargins(0, 0, 0, 0);
 
-        auto idEdit = new QSpinBox(this);
         auto amountEdit = new QSpinBox(this);
         auto priceEdit = new QDoubleSpinBox(this);
 
-        formLayout->addRow(new QLabel(tr("ID: ")), idEdit);
         formLayout->addRow(new QLabel(tr("Amount: ")), amountEdit);
         formLayout->addRow(new QLabel(tr("Price: ")), priceEdit);
 
@@ -84,34 +90,69 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         auto updateOrderButton = new QPushButton(tr("Update Order"), this);
 
         connect(addOrderButton, &QPushButton::clicked, this,
-                [idEdit, amountEdit, priceEdit]()
+                [this, amountEdit, priceEdit]()
                 {
-                    auto newOrder = std::make_shared<order>(idEdit->value(), amountEdit->value(), priceEdit->value());
+                    const auto oneGroup = tree_->currentItem()->data(0, Qt::UserRole).value<std::shared_ptr<group>>();
 
-                    auto command = new addCommand(pythonCommands::model_, newOrder);
+                    if (oneGroup != nullptr)
+                    {
+                        auto newOrder = std::make_shared<order>("New Order", amountEdit->value(), priceEdit->value(),
+                                                                oneGroup.get());
 
-                    auto cmdManager = commandManager::getInstance();
-                    cmdManager->runCommand(command);
+                        auto command = new addOrderCommand(pythonCommands::model_, oneGroup, newOrder);
+
+                        auto cmdManager = commandManager::getInstance();
+                        cmdManager->runCommand(command);
+                    }
+                    else
+                    {
+                        QMessageBox::warning(this, tr("Warning"), tr("Please select an group to add."));
+                    }
                 });
 
         connect(removeOrderButton, &QPushButton::clicked, this,
-                [idEdit]()
+                [this]()
                 {
-                    auto command = new removeCommand(pythonCommands::model_, idEdit->value());
+                    const auto oneOrder = tree_->currentItem()->data(0, Qt::UserRole).value<std::shared_ptr<order>>();
 
-                    auto cmdManager = commandManager::getInstance();
-                    cmdManager->runCommand(command);
+                    if (oneOrder != nullptr)
+                    {
+                        const auto oneGroup =
+                            tree_->currentItem()->parent()->data(0, Qt::UserRole).value<std::shared_ptr<group>>();
+
+                        auto command = new removeOrderCommand(model_, oneGroup, oneOrder);
+
+                        auto cmdManager = commandManager::getInstance();
+                        cmdManager->runCommand(command);
+                    }
+                    else
+                    {
+                        QMessageBox::warning(this, tr("Warning"), tr("Please select an order to remove."));
+                    }
                 });
 
         connect(updateOrderButton, &QPushButton::clicked, this,
-                [idEdit, amountEdit, priceEdit]()
+                [this, amountEdit, priceEdit]()
                 {
-                    auto command = new updateCommand(pythonCommands::model_, idEdit->value(), amountEdit->value(),
-                                                     priceEdit->value());
+                    const auto oneOrder = tree_->currentItem()->data(0, Qt::UserRole).value<std::shared_ptr<order>>();
 
-                    auto cmdManager = commandManager::getInstance();
-                    cmdManager->runCommand(command);
+                    if (oneOrder != nullptr)
+                    {
+                        auto command =
+                            new updateOrderCommand(model_, oneOrder, amountEdit->value(), priceEdit->value());
+
+                        auto cmdManager = commandManager::getInstance();
+                        cmdManager->runCommand(command);
+                    }
+                    else
+                    {
+                        QMessageBox::warning(this, tr("Warning"), tr("Please select an order to update."));
+                    }
                 });
+
+        addOrderButton->setEnabled(false);
+        removeOrderButton->setEnabled(false);
+        updateOrderButton->setEnabled(false);
 
         hlayout->addWidget(addOrderButton);
         hlayout->addWidget(removeOrderButton);
@@ -125,20 +166,45 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         groupBoxLayout->addLayout(hlayout);
 
         layout->addWidget(groupBox);
+
+        connect(tree_, &QTreeWidget::currentItemChanged, this,
+                [this, addOrderButton, removeOrderButton, updateOrderButton](QTreeWidgetItem* current)
+                {
+                    if (current == nullptr)
+                    {
+                        return;
+                    }
+
+                    const auto oneVariaet = current->data(0, Qt::UserRole);
+
+                    addOrderButton->setEnabled(false);
+                    removeOrderButton->setEnabled(false);
+                    updateOrderButton->setEnabled(false);
+
+                    if (oneVariaet.canConvert<std::shared_ptr<order>>())
+                    {
+                        removeOrderButton->setEnabled(true);
+                        updateOrderButton->setEnabled(true);
+                    }
+                    else if ((oneVariaet.canConvert<std::shared_ptr<group>>()))
+                    {
+                        addOrderButton->setEnabled(true);
+                    }
+                });
     }
 
     {
         auto console = new pythonConsole(this);
-        connect(undoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Undo.")); });
-        connect(redoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Redo.")); });
+        // connect(undoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Undo.")); });
+        // connect(redoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Redo.")); });
         connect(model_.get(), &dataModel::messageEmerged, console, &pythonConsole::onMessagePassedIn);
 
-        auto dockWidget = new QDockWidget(tr("Python Console"), this);
-        dockWidget->setWidget(console);
-        this->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
-    }
+        {
+            auto dockWidget = new QDockWidget(tr("Python Console"), this);
+            dockWidget->setWidget(console);
+            this->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
+        }
 
-    {
         auto recordWidget = new QWidget(this);
         auto recordWidgetLayout = new QVBoxLayout(recordWidget);
         recordWidgetLayout->setContentsMargins(9, 9, 9, 9);
@@ -153,7 +219,7 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         recordWidgetLayout->addWidget(recordingBrowser);
 
         connect(recordBtn, &QToolButton::toggled, this,
-                [recordBtn, recordingBrowser](bool checked)
+                [console, recordBtn, recordingBrowser](bool checked)
                 {
                     if (checked)
                     {
@@ -165,20 +231,24 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
                         commandManager::getInstance()->stopRecording();
                         recordBtn->setText(tr("Start Record"));
                     }
+
+                    console->setConsoleEnabled(!checked);
                 });
 
         connect(cmdManager, &commandManager::recordingInserted, this,
                 [recordingBrowser](const QString& recording) { recordingBrowser->append(recording); });
 
         connect(cmdManager, &commandManager::recordingStarted, this,
-                [recordingBrowser]() { recordingBrowser->append(tr("=== Recording Started ===")); });
+                [recordingBrowser]() { recordingBrowser->append(tr("# === Recording Started ===")); });
 
         connect(cmdManager, &commandManager::recordingStopped, this,
-                [recordingBrowser]() { recordingBrowser->append(tr("=== Recording Stopped ===")); });
+                [recordingBrowser]() { recordingBrowser->append(tr("# === Recording Stopped ===")); });
 
-        auto dockWidget = new QDockWidget(tr("Recording Browser"), this);
-        dockWidget->setWidget(recordWidget);
-        this->addDockWidget(Qt::RightDockWidgetArea, dockWidget);
+        {
+            auto dockWidget = new QDockWidget(tr("Recording Browser"), this);
+            dockWidget->setWidget(recordWidget);
+            this->addDockWidget(Qt::RightDockWidgetArea, dockWidget);
+        }
     }
 
     connect(model_.get(), &dataModel::dataChanged, this, &mainWindow::onDataChanged);
@@ -188,18 +258,30 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 
 void mainWindow::onDataChanged()
 {
-    const auto orders = model_->orders();
-
-    table_->clearContents();
-    table_->setRowCount((int)orders.size());
+    tree_->clear();
 
     int counter = 0;
-    for (const auto& [id, order] : orders)
+    const auto root = model_->getRoot();
+    for (const auto& oneGroupObject : root->getChildren())
     {
-        table_->setItem(counter, 0, new QTableWidgetItem(QString::number(order->id_)));
-        table_->setItem(counter, 1, new QTableWidgetItem(QString::number(order->amount_)));
-        table_->setItem(counter, 2, new QTableWidgetItem(QString::number(order->price_)));
+        auto groupItem = new QTreeWidgetItem(tree_, QStringList() << QString::fromStdString(oneGroupObject->getName()));
+        auto oneGroup = std::dynamic_pointer_cast<group>(oneGroupObject);
+        groupItem->setData(0, Qt::UserRole, QVariant::fromValue(oneGroup));
 
-        counter++;
+        tree_->addTopLevelItem(groupItem);
+
+        for (const auto& oneOrderObject : oneGroup->getChildren())
+        {
+            auto oneOrder = std::dynamic_pointer_cast<order>(oneOrderObject);
+
+            auto orderItem = new QTreeWidgetItem(groupItem, QStringList() << QString::fromStdString(oneOrder->getName())
+                                                                          << QString::number(oneOrder->getAmount())
+                                                                          << QString::number(oneOrder->getPrice()));
+            orderItem->setData(0, Qt::UserRole, QVariant::fromValue(oneOrder));
+
+            groupItem->addChild(orderItem);
+        }
     }
+
+    tree_->expandAll();
 }
