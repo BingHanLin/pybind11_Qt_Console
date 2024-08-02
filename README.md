@@ -14,6 +14,10 @@ This project embeds a Python console into Qt using the pybind11 package. The Pyt
 
 * Undo/Redo Framework: Support reverting and restoring changes.
 
+
+* Operation Recording: Capture and record user interactions with the UI, enabling convenient playback and analysis of scripts.
+
+
 * MIT License for easy integration into your own projects.
 
 ## Structure
