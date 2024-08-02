@@ -150,6 +150,10 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
                     }
                 });
 
+        addOrderButton->setEnabled(false);
+        removeOrderButton->setEnabled(false);
+        updateOrderButton->setEnabled(false);
+
         hlayout->addWidget(addOrderButton);
         hlayout->addWidget(removeOrderButton);
         hlayout->addWidget(updateOrderButton);
@@ -162,20 +166,45 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         groupBoxLayout->addLayout(hlayout);
 
         layout->addWidget(groupBox);
+
+        connect(tree_, &QTreeWidget::currentItemChanged, this,
+                [this, addOrderButton, removeOrderButton, updateOrderButton](QTreeWidgetItem* current)
+                {
+                    if (current == nullptr)
+                    {
+                        return;
+                    }
+
+                    const auto oneVariaet = current->data(0, Qt::UserRole);
+
+                    addOrderButton->setEnabled(false);
+                    removeOrderButton->setEnabled(false);
+                    updateOrderButton->setEnabled(false);
+
+                    if (oneVariaet.canConvert<std::shared_ptr<order>>())
+                    {
+                        removeOrderButton->setEnabled(true);
+                        updateOrderButton->setEnabled(true);
+                    }
+                    else if ((oneVariaet.canConvert<std::shared_ptr<group>>()))
+                    {
+                        addOrderButton->setEnabled(true);
+                    }
+                });
     }
 
     {
         auto console = new pythonConsole(this);
-        connect(undoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Undo.")); });
-        connect(redoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Redo.")); });
+        // connect(undoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Undo.")); });
+        // connect(redoAction, &QAction::triggered, this, [console]() { console->onMessagePassedIn(tr("Redo.")); });
         connect(model_.get(), &dataModel::messageEmerged, console, &pythonConsole::onMessagePassedIn);
 
-        auto dockWidget = new QDockWidget(tr("Python Console"), this);
-        dockWidget->setWidget(console);
-        this->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
-    }
+        {
+            auto dockWidget = new QDockWidget(tr("Python Console"), this);
+            dockWidget->setWidget(console);
+            this->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
+        }
 
-    {
         auto recordWidget = new QWidget(this);
         auto recordWidgetLayout = new QVBoxLayout(recordWidget);
         recordWidgetLayout->setContentsMargins(9, 9, 9, 9);
@@ -190,7 +219,7 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         recordWidgetLayout->addWidget(recordingBrowser);
 
         connect(recordBtn, &QToolButton::toggled, this,
-                [recordBtn, recordingBrowser](bool checked)
+                [console, recordBtn, recordingBrowser](bool checked)
                 {
                     if (checked)
                     {
@@ -202,6 +231,8 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
                         commandManager::getInstance()->stopRecording();
                         recordBtn->setText(tr("Start Record"));
                     }
+
+                    console->setConsoleEnabled(!checked);
                 });
 
         connect(cmdManager, &commandManager::recordingInserted, this,
@@ -213,9 +244,11 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         connect(cmdManager, &commandManager::recordingStopped, this,
                 [recordingBrowser]() { recordingBrowser->append(tr("# === Recording Stopped ===")); });
 
-        auto dockWidget = new QDockWidget(tr("Recording Browser"), this);
-        dockWidget->setWidget(recordWidget);
-        this->addDockWidget(Qt::RightDockWidgetArea, dockWidget);
+        {
+            auto dockWidget = new QDockWidget(tr("Recording Browser"), this);
+            dockWidget->setWidget(recordWidget);
+            this->addDockWidget(Qt::RightDockWidgetArea, dockWidget);
+        }
     }
 
     connect(model_.get(), &dataModel::dataChanged, this, &mainWindow::onDataChanged);

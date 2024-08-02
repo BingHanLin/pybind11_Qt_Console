@@ -3,10 +3,10 @@
 #include <QCompleter>
 #include <QKeyEvent>
 #include <QWidget>
+#include <memory>
 #include <qtextedit.h>
 
 class pythonCommandLine;
-
 class pythonConsole : public QWidget
 {
     Q_OBJECT
@@ -14,11 +14,14 @@ class pythonConsole : public QWidget
   public:
     explicit pythonConsole(QWidget* parent = nullptr);
 
+    void setConsoleEnabled(bool enabled);
+
   public slots:
     void onMessagePassedIn(const QString& message);
 
   private:
     QTextEdit* outputTextEdit_;
+    pythonCommandLine* commandLine_;
 
   private slots:
     void onCommandInserted(const QString& commands);
