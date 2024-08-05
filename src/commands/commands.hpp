@@ -6,6 +6,7 @@
 #include <QUndoCommand>
 
 #include "commandManager.hpp"
+#include "commandUtil.hpp"
 #include "dataModel.hpp"
 #include "group.hpp"
 #include "order.hpp"
@@ -41,6 +42,15 @@ class addOrderCommand : public baseCommand
                              const std::shared_ptr<order> &newOrder)
         : baseCommand(std::move(model), QObject::tr("Add Order")), group_(oneGroup), newOrder_(newOrder)
     {
+        const auto orders = group_->getChildren();
+        std::map<std::string, std::shared_ptr<order>> ordersMap;
+        for (const auto &oneOrder : orders)
+        {
+            ordersMap[oneOrder->getName()] = std::dynamic_pointer_cast<order>(oneOrder);
+        }
+
+        const auto uniqueName = generateUniqueName(newOrder_->getName(), ordersMap);
+        newOrder_->setName(uniqueName);
     }
 
     ~addOrderCommand() override = default;

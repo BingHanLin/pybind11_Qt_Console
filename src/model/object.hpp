@@ -35,6 +35,11 @@ class object
         return name_;
     }
 
+    void setName(const std::string& name)
+    {
+        name_ = name;
+    }
+
   private:
     object* parent_;
     std::string name_;

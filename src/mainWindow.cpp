@@ -92,6 +92,11 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         connect(addOrderButton, &QPushButton::clicked, this,
                 [this, amountEdit, priceEdit]()
                 {
+                    if (tree_->currentItem() == nullptr)
+                    {
+                        return;
+                    }
+
                     const auto oneGroup = tree_->currentItem()->data(0, Qt::UserRole).value<std::shared_ptr<group>>();
 
                     if (oneGroup != nullptr)
@@ -113,6 +118,11 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         connect(removeOrderButton, &QPushButton::clicked, this,
                 [this]()
                 {
+                    if (tree_->currentItem() == nullptr)
+                    {
+                        return;
+                    }
+
                     const auto oneOrder = tree_->currentItem()->data(0, Qt::UserRole).value<std::shared_ptr<order>>();
 
                     if (oneOrder != nullptr)
@@ -134,6 +144,11 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         connect(updateOrderButton, &QPushButton::clicked, this,
                 [this, amountEdit, priceEdit]()
                 {
+                    if (tree_->currentItem() == nullptr)
+                    {
+                        return;
+                    }
+
                     const auto oneOrder = tree_->currentItem()->data(0, Qt::UserRole).value<std::shared_ptr<order>>();
 
                     if (oneOrder != nullptr)
@@ -230,6 +245,7 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
                     {
                         commandManager::getInstance()->stopRecording();
                         recordBtn->setText(tr("Start Record"));
+                        recordingBrowser->setStyleSheet("");
                     }
 
                     console->setConsoleEnabled(!checked);
