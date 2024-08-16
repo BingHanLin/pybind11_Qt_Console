@@ -224,8 +224,8 @@ class clearAllOrdersCommand : public baseCommand
 
         if (isFirstTime_ && commandManager::getInstance()->isRecoring())
         {
-            // const auto record = scriptCallback_();
-            // commandManager::getInstance()->insertRecording(QString::fromStdString(record));
+            const auto record = scriptCallback_();
+            commandManager::getInstance()->insertRecording(QString::fromStdString(record));
 
             isFirstTime_ = false;
         }

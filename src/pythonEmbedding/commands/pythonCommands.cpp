@@ -174,9 +174,9 @@ PYBIND11_EMBEDDED_MODULE(root_module, root_var)
         "Clear all orders.");
 
     {
-        // clearAllOrdersCommand::scriptCallbackType callback = []() -> std::string
-        // { return "order_commands.clear_all_orders()"; };
+        clearAllOrdersCommand::scriptCallbackType callback = []() -> std::string
+        { return "order_commands.clear_all_orders()"; };
 
-        // clearAllOrdersCommand::setScriptCallback(callback);
+        clearAllOrdersCommand::setScriptCallback(callback);
     };
 }
