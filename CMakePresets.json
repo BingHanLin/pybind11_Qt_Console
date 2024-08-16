@@ -52,14 +52,6 @@
                 "Qt5_BIN_DIR": {
                     "type": "STRING",
                     "value": "C:/Applications/Qt/Qt5.14.2/5.14.2/msvc2017_64/bin"
-                },
-                "PYTHON_EXECUTABLE": {
-                    "type": "PATH",
-                    "value": "${sourceDir}/pybind11-env/Scripts/python.exe"
-                },
-                "pybind11_DIR": {
-                    "type": "PATH",
-                    "value": "${sourceDir}/extern/pybind11/build/lib/pybind11/share/cmake/pybind11"
                 }
             }
         }

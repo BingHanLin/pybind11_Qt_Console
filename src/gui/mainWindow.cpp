@@ -16,6 +16,7 @@
 #include <qnamespace.h>
 #include <qvariant.h>
 
+#include "LLMConsole.hpp"
 #include "commandManager.hpp"
 #include "commands.hpp"
 #include "dataModel.hpp"
@@ -61,6 +62,13 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
     pythonCommands::setDataModel(model_);
 
     {
+        auto hlayout = new QHBoxLayout;
+        auto llmConsoleBtn = new QPushButton(tr("LLM Console"), this);
+        hlayout->addStretch();
+        hlayout->addWidget(llmConsoleBtn);
+        layout->addLayout(hlayout);
+        connect(llmConsoleBtn, &QPushButton::clicked, this, &mainWindow::onShowLLMConsole);
+
         tree_ = new QTreeWidget(this);
         tree_->setAlternatingRowColors(true);
 
@@ -78,6 +86,9 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 
         auto amountEdit = new QSpinBox(this);
         auto priceEdit = new QDoubleSpinBox(this);
+        priceEdit->setMaximum(1000000.0);
+        priceEdit->setMinimum(0);
+        priceEdit->setDecimals(6);
 
         formLayout->addRow(new QLabel(tr("Amount: ")), amountEdit);
         formLayout->addRow(new QLabel(tr("Price: ")), priceEdit);
@@ -300,4 +311,11 @@ void mainWindow::onDataChanged()
     }
 
     tree_->expandAll();
+}
+
+void mainWindow::onShowLLMConsole()
+{
+    auto llmConsole = new LLMConsole(this);
+    llmConsole->setAttribute(Qt::WA_DeleteOnClose);
+    llmConsole->show();
 }

@@ -19,4 +19,5 @@ class mainWindow : public QMainWindow
 
   private slots:
     void onDataChanged();
+    void onShowLLMConsole();
 };
