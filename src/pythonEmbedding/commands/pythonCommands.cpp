@@ -158,4 +158,25 @@ PYBIND11_EMBEDDED_MODULE(root_module, root_var)
 
         updateOrderCommand::setScriptCallback(callback);
     };
+
+    order_commands.def(
+        "clear_all_orders",
+        []() -> void
+        {
+            if (pythonCommands::model_ != nullptr)
+            {
+                auto command = new clearAllOrdersCommand(pythonCommands::model_);
+
+                auto cmdManager = commandManager::getInstance();
+                cmdManager->runCommand(command);
+            }
+        },
+        "Clear all orders.");
+
+    {
+        // clearAllOrdersCommand::scriptCallbackType callback = []() -> std::string
+        // { return "order_commands.clear_all_orders()"; };
+
+        // clearAllOrdersCommand::setScriptCallback(callback);
+    };
 }

@@ -22,9 +22,14 @@ target_link_libraries(${PROJECT_NAME}
         Qt5::Gui 
         Qt5::Widgets
         Qt5::Network
-        extern::openai
         core
 )
+
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC 
+        extern::openai
+)
+
 
 install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION

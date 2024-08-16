@@ -21,6 +21,11 @@ class root : public object
         return results;
     };
 
+    std::vector<std::shared_ptr<group>> getGroups()
+    {
+        return groups_;
+    }
+
     void addGroup(const std::shared_ptr<group>& g)
     {
         groups_.push_back(g);

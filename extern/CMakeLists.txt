@@ -29,7 +29,6 @@ add_library(pybind11_embed
 
 add_library(${PROJECT_NAME}::pybind11_embed ALIAS pybind11_embed)
 
-
 target_link_libraries(pybind11_embed
     INTERFACE
         pybind11::embed

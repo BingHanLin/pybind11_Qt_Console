@@ -2,12 +2,15 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <qboxlayout.h>
+#include <utility>
 
 #include "LLMConsole.hpp"
-#include "nlohmann/json.hpp"
+#include "commandManager.hpp"
+#include "commands.hpp"
 #include "openai.hpp"
 
-LLMConsole::LLMConsole(QWidget* parent) : QDialog(parent)
+
+LLMConsole::LLMConsole(std::shared_ptr<dataModel> model, QWidget* parent) : QDialog(parent), model_(std::move(model))
 {
     auto layout = new QVBoxLayout(this);
 
@@ -38,7 +41,7 @@ void LLMConsole::sendMessage(const QString& message)
     {
         messagesJSON.push_back(R"({
         "role" : "system",
-        "content" : "You are a helpful customer support assistant. Use the supplied tools to assist the user."
+        "content" : "You are a helpful assistant. Use the supplied tools to assist the user if necessary."
     })"_json);
 
         auto userMessage = nlohmann::json::object();
@@ -48,20 +51,16 @@ void LLMConsole::sendMessage(const QString& message)
     }
 
     auto toolsJSON = nlohmann::json::array();
-    toolsJSON.push_back(R"({
+    {
+        toolsJSON.push_back(R"({
         "type": "function",
         "function": {
-            "name": "get_current_weather",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "location": { "type": "string", "description": "The location to get the weather for" }
-                },
-                "required": ["location"]
-            }
+            "name": "clear_all_orders",
+            "description": "Clear all orders. Call this when a customer asks to clear all orders, for example 'Clear all orders'.",
+            "parameters": {}
         }
-    })"_json);
+        })"_json);
+    }
 
     auto paylod = R"({
         "model": "gpt-3.5-turbo",
@@ -72,7 +71,33 @@ void LLMConsole::sendMessage(const QString& message)
     paylod["messages"] = messagesJSON;
     paylod["tools"] = toolsJSON;
 
-    auto completion = openai::chat().create(paylod);
+    auto response = openai::chat().create(paylod);
 
-    std::cout << "Response is:\n" << completion.dump(4) << std::endl;
+    std::cout << "Response is:\n" << response.dump(4) << std::endl;
+
+    this->processResponse(response);
+}
+
+void LLMConsole::processResponse(const nlohmann::json& response)
+{
+    if (!response.contains("choices")) return;
+    if (!response["choices"].is_array()) return;
+    if (response["choices"].empty()) return;
+
+    const auto& choice = response["choices"][0];
+
+    if (choice.at("finish_reason") == "tool_calls")
+    {
+        const auto& toolCalls = choice.at("message").at("tool_calls");
+
+        for (const auto& toolCall : toolCalls)
+        {
+            if (toolCall.at("function").at("name") == "clear_all_orders")
+            {
+                auto command = new clearAllOrdersCommand(model_);
+                auto cmdManager = commandManager::getInstance();
+                cmdManager->runCommand(command);
+            };
+        }
+    }
 }

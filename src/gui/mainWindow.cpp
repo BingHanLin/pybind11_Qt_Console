@@ -315,7 +315,7 @@ void mainWindow::onDataChanged()
 
 void mainWindow::onShowLLMConsole()
 {
-    auto llmConsole = new LLMConsole(this);
+    auto llmConsole = new LLMConsole(model_, this);
     llmConsole->setAttribute(Qt::WA_DeleteOnClose);
     llmConsole->show();
 }

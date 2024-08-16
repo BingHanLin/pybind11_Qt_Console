@@ -34,7 +34,6 @@ class addOrderCommand : public baseCommand
     }
 
   private:
-    // static std::function<std::string(std::string, int, int, int)> scriptCallback_;
     static scriptCallbackType scriptCallback_;
 
   public:
@@ -185,4 +184,63 @@ class updateOrderCommand : public baseCommand
 
     int oldAmount_{};
     double oldPrice_{};
+};
+
+class clearAllOrdersCommand : public baseCommand
+{
+  public:
+    using scriptCallbackType = std::function<std::string()>;
+    static void setScriptCallback(scriptCallbackType callback)
+    {
+        scriptCallback_ = std::move(callback);
+    }
+
+  private:
+    static scriptCallbackType scriptCallback_;
+
+  public:
+    explicit clearAllOrdersCommand(const std::shared_ptr<dataModel> &model)
+        : baseCommand(model, QObject::tr("Clear All Orders"))
+    {
+        oldGroups_ = model_->getRoot()->getGroups();
+    }
+
+    ~clearAllOrdersCommand() override = default;
+
+    void redo() override
+    {
+        if (oldGroups_.empty())
+        {
+            this->setObsolete(true);
+            return;
+        }
+
+        for (const auto &group : oldGroups_)
+        {
+            model_->getRoot()->removeGroup(group);
+        }
+
+        emit model_->dataChanged();
+
+        if (isFirstTime_ && commandManager::getInstance()->isRecoring())
+        {
+            // const auto record = scriptCallback_();
+            // commandManager::getInstance()->insertRecording(QString::fromStdString(record));
+
+            isFirstTime_ = false;
+        }
+    }
+
+    void undo() override
+    {
+        for (const auto &group : oldGroups_)
+        {
+            model_->getRoot()->addGroup(group);
+        }
+
+        emit model_->dataChanged();
+    }
+
+  private:
+    std::vector<std::shared_ptr<group>> oldGroups_;
 };
