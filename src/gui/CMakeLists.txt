@@ -25,7 +25,7 @@ target_link_libraries(${PROJECT_NAME}
         Qt5::Widgets
         Qt5::Network
         pythonEmbedding
-        LLMConsole
+        LLMChat
         core
 )
 

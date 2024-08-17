@@ -47,5 +47,5 @@ find_package(Qt5 REQUIRED COMPONENTS Core Network Widgets LinguistTools Gui Open
 add_subdirectory(extern)
 add_subdirectory(src/core)
 add_subdirectory(src/pythonEmbedding)
-add_subdirectory(src/LLMConsole)
+add_subdirectory(src/LLMChat)
 add_subdirectory(src/gui)

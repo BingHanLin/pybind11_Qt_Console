@@ -16,7 +16,7 @@
 #include <qnamespace.h>
 #include <qvariant.h>
 
-#include "LLMConsole.hpp"
+#include "LLMChat.hpp"
 #include "commandManager.hpp"
 #include "commands.hpp"
 #include "dataModel.hpp"
@@ -63,11 +63,11 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
 
     {
         auto hlayout = new QHBoxLayout;
-        auto llmConsoleBtn = new QPushButton(tr("LLM Console"), this);
+        auto llmConsoleBtn = new QPushButton(tr("LLM Chat"), this);
         hlayout->addStretch();
         hlayout->addWidget(llmConsoleBtn);
         layout->addLayout(hlayout);
-        connect(llmConsoleBtn, &QPushButton::clicked, this, &mainWindow::onShowLLMConsole);
+        connect(llmConsoleBtn, &QPushButton::clicked, this, &mainWindow::onShowLLMChat);
 
         tree_ = new QTreeWidget(this);
         tree_->setAlternatingRowColors(true);
@@ -313,9 +313,10 @@ void mainWindow::onDataChanged()
     tree_->expandAll();
 }
 
-void mainWindow::onShowLLMConsole()
+void mainWindow::onShowLLMChat()
 {
-    auto llmConsole = new LLMConsole(model_, this);
+    auto llmConsole = new LLMChat(model_, this);
     llmConsole->setAttribute(Qt::WA_DeleteOnClose);
+    llmConsole->resize(400, 450);
     llmConsole->show();
 }

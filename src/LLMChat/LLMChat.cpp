@@ -4,23 +4,23 @@
 #include <qboxlayout.h>
 #include <utility>
 
-#include "LLMConsole.hpp"
+#include "LLMChat.hpp"
+#include "chatItemWidget.hpp"
 #include "commandManager.hpp"
 #include "commands.hpp"
 #include "openai.hpp"
 
-
-LLMConsole::LLMConsole(std::shared_ptr<dataModel> model, QWidget* parent) : QDialog(parent), model_(std::move(model))
+LLMChat::LLMChat(std::shared_ptr<dataModel> model, QWidget* parent)
+    : QDialog(parent), model_(std::move(model)), chatList_(new QListWidget(this))
 {
     auto layout = new QVBoxLayout(this);
+    layout->addWidget(chatList_);
 
     auto lineEdit = new QLineEdit(this);
     auto sendButton = new QPushButton("Send", this);
 
-    layout->addWidget(lineEdit);
-
     auto hLayout = new QHBoxLayout();
-    hLayout->addStretch();
+    hLayout->addWidget(lineEdit);
     hLayout->addWidget(sendButton);
 
     layout->addLayout(hLayout);
@@ -29,12 +29,43 @@ LLMConsole::LLMConsole(std::shared_ptr<dataModel> model, QWidget* parent) : QDia
             [this, lineEdit]()
             {
                 const QString message = lineEdit->text();
-                this->sendMessage(message);
+                lineEdit->clear();
+                lineEdit->setFocus();
+                this->onSendMessageClicked(message);
             });
 }
 
-void LLMConsole::sendMessage(const QString& message)
+void LLMChat::appendUserMessage(const QString& message)
 {
+    const auto trimmedMessage = message.trimmed();
+    auto widget = new chatItemWidget();
+    widget->setMessage(trimmedMessage, chatItemRole::USER);
+
+    auto item = new QListWidgetItem();
+    item->setSizeHint(QSize(0, 65));
+
+    chatList_->addItem(item);
+    chatList_->setItemWidget(item, widget);
+}
+
+void LLMChat::appendAssistantMessage(const QString& message)
+{
+    const auto trimmedMessage = message.trimmed();
+    auto widget = new chatItemWidget();
+    widget->setMessage(trimmedMessage, chatItemRole::ASSISTANT);
+
+    auto item = new QListWidgetItem();
+    item->setSizeHint(QSize(0, 65));
+    item->setBackground(QColor(167, 255, 237));
+
+    chatList_->addItem(item);
+    chatList_->setItemWidget(item, widget);
+}
+
+void LLMChat::onSendMessageClicked(const QString& message)
+{
+    this->appendUserMessage(message);
+
     openai::start();
 
     auto messagesJSON = nlohmann::json::array();
@@ -78,7 +109,7 @@ void LLMConsole::sendMessage(const QString& message)
     this->processResponse(response);
 }
 
-void LLMConsole::processResponse(const nlohmann::json& response)
+void LLMChat::processResponse(const nlohmann::json& response)
 {
     if (!response.contains("choices")) return;
     if (!response["choices"].is_array()) return;
