@@ -87,4 +87,4 @@ Contributions to this project are welcome. Please feel free to submit issues or 
 7. [QGIS/python/console](https://github.com/qgis/QGIS/tree/master/python/console)
 8. [A Qt Console for IPython](https://ipython.org/ipython-doc/dev/interactive/qtconsole.html)
 9. [openai-cpp](https://github.com/olrea/openai-cpp)
-10.[OpenAI API - Function Calling](https://platform.openai.com/docs/guides/function-calling)
+10. [OpenAI API - Function Calling](https://platform.openai.com/docs/guides/function-calling)
