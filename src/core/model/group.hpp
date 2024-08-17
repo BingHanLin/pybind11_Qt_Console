@@ -21,6 +21,11 @@ class group : public object
         return results;
     };
 
+    std::vector<std::shared_ptr<order>> getOrders()
+    {
+        return orders_;
+    }
+
     void addOrder(const std::shared_ptr<order>& o)
     {
         orders_.push_back(o);

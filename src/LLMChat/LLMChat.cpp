@@ -8,8 +8,10 @@
 
 #include "LLMChat.hpp"
 #include "chatItemWidget.hpp"
+#include "chatUtils.hpp"
 #include "commandManager.hpp"
 #include "commands.hpp"
+#include "nlohmann/json.hpp"
 #include "openai.hpp"
 
 LLMChat::LLMChat(std::shared_ptr<dataModel> model, QWidget* parent)
@@ -119,7 +121,22 @@ void LLMChat::appendAssistantMessage(const QString& message)
         "function": {
             "name": "clear_all_orders",
             "description": "Clear all orders. Only call this when a customer asks to clear all orders, for example 'Clear all orders'.",
-            "parameters": {}
+            "parameters": {
+                "type": "object",
+                "properties": {}
+            }
+        }
+        })"_json);
+
+        toolsJSON.push_back(R"({
+        "type": "function",
+        "function": {
+            "name": "show_all_orders",
+            "description": "Show all orders and the group they belong to. The result should be a JSON array of objects, where each object represents a group and contains an array of orders. Call this when a customer asks to show all orders, for example 'Show all orders'.",
+            "parameters": {
+                "type": "object",
+                "properties": {}
+            }
         }
         })"_json);
 
@@ -171,7 +188,8 @@ nlohmann::json LLMChat::processResponse(const nlohmann::json& response)
 
         for (const auto& toolCall : toolCalls)
         {
-            if (toolCall.at("function").at("name") == "clear_all_orders")
+            const auto toolName = toolCall.at("function").at("name");
+            if (toolName == "clear_all_orders")
             {
                 auto command = new clearAllOrdersCommand(model_);
                 auto cmdManager = commandManager::getInstance();
@@ -186,7 +204,22 @@ nlohmann::json LLMChat::processResponse(const nlohmann::json& response)
                 toolResultMessage["tool_call_id"] = toolCall.at("id");
 
                 newMessages.push_back(toolResultMessage);
-            };
+            }
+            else if (toolName == "show_all_orders")
+            {
+                const auto data = getAllOrdersInfo(model_);
+
+                auto toolResultMessage = R"({
+                    "role": "tool",
+                    "content": "",
+                    "tool_call_id": 0
+                })"_json;
+
+                toolResultMessage["content"] = data.dump(4);
+                toolResultMessage["tool_call_id"] = toolCall.at("id");
+
+                newMessages.push_back(toolResultMessage);
+            }
         }
 
         return generatePayload(newMessages);
@@ -215,6 +248,8 @@ void LLMChat::onSendMessageClicked(const QString& message)
     while (!payload.empty())
     {
         openai::start();
+
+        std::cout << "Payload is:\n" << payload.dump(4) << std::endl;
 
         const auto response = openai::chat().create(payload);
 
