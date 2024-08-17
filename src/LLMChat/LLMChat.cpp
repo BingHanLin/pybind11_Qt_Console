@@ -1,8 +1,10 @@
+#include <utility>
+
 #include <QLineEdit>
 #include <QPushButton>
+#include <QTimer.h>
 #include <QVBoxLayout>
 #include <qboxlayout.h>
-#include <utility>
 
 #include "LLMChat.hpp"
 #include "chatItemWidget.hpp"
@@ -21,6 +23,8 @@ LLMChat::LLMChat(std::shared_ptr<dataModel> model, QWidget* parent)
     layout->addWidget(chatList_);
 
     auto lineEdit = new QLineEdit(this);
+    lineEdit->setPlaceholderText("Type your message to interact with the assistant...");
+
     auto sendButton = new QPushButton("Send", this);
 
     auto hLayout = new QHBoxLayout();
@@ -39,6 +43,32 @@ LLMChat::LLMChat(std::shared_ptr<dataModel> model, QWidget* parent)
             });
 
     lineEdit->setFocus();
+
+    QTimer::singleShot(
+        0,
+        [this]() { this->appendAssistantMessage(tr("Hello! I am a helpful assistant. How can I assist you today?")); });
+}
+
+void LLMChat::resizeEvent(QResizeEvent* event)
+{
+    QDialog::resizeEvent(event);
+
+    this->updateListItemSizes();
+}
+
+void LLMChat::updateListItemSizes()
+{
+    const int listWidth = chatList_->viewport()->width();
+    for (int i = 0; i < chatList_->count(); ++i)
+    {
+        QListWidgetItem* item = chatList_->item(i);
+        QWidget* widget = chatList_->itemWidget(item);
+        if (widget)
+        {
+            widget->setFixedWidth(listWidth);
+            item->setSizeHint(widget->sizeHint());
+        }
+    }
 }
 
 void LLMChat::appendUserMessage(const QString& message)
@@ -52,6 +82,8 @@ void LLMChat::appendUserMessage(const QString& message)
 
     chatList_->addItem(item);
     chatList_->setItemWidget(item, widget);
+
+    this->updateListItemSizes();
 }
 
 void LLMChat::appendAssistantMessage(const QString& message)
@@ -66,6 +98,8 @@ void LLMChat::appendAssistantMessage(const QString& message)
 
     chatList_->addItem(item);
     chatList_->setItemWidget(item, widget);
+
+    this->updateListItemSizes();
 }
 
 [[nodiscard]] nlohmann::json LLMChat::generatePayload(const std::vector<nlohmann::json>& newMessages)

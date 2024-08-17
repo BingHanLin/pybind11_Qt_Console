@@ -8,6 +8,7 @@ chatItemWidget::chatItemWidget(QWidget* parent) : QWidget(parent), ui(new Ui::ch
 {
     ui->setupUi(this);
     ui->messageLabel->setWordWrap(true);
+    ui->timeLabel->setStyleSheet("QLabel { color : rgb(170, 170, 170); }");
 }
 
 chatItemWidget::~chatItemWidget()

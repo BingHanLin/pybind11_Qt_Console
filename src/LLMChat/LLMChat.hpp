@@ -12,10 +12,15 @@ class LLMChat : public QDialog
   public:
     explicit LLMChat(std::shared_ptr<dataModel> model, QWidget* parent = nullptr);
 
+  protected:
+    void resizeEvent(QResizeEvent* event) override;
+
   private:
     std::shared_ptr<dataModel> model_;
     QListWidget* chatList_;
     std::vector<nlohmann::json> messageHistory_;
+
+    void updateListItemSizes();
 
     void appendUserMessage(const QString& message);
     void appendAssistantMessage(const QString& message);
