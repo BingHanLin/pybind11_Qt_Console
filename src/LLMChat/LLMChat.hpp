@@ -1,7 +1,11 @@
-#include <QDialog>
-#include <QListWidget>
 #include <vector>
 
+#include <QDialog>
+#include <QLabel>
+#include <QListWidget>
+
+
+#include "chatItemWidget.hpp"
 #include "dataModel.hpp"
 #include "nlohmann/json.hpp"
 
@@ -18,12 +22,14 @@ class LLMChat : public QDialog
   private:
     std::shared_ptr<dataModel> model_;
     QListWidget* chatList_;
+    QLabel* popupLabel_;
     std::vector<nlohmann::json> messageHistory_;
 
     void updateListItemSizes();
 
-    void appendUserMessage(const QString& message);
-    void appendAssistantMessage(const QString& message);
+    void appendMessage(const chatItemRole& role, const QString& message);
+
+    void showPopupMessage(const QString& message);
 
     [[nodiscard]] nlohmann::json generatePayload(const std::vector<nlohmann::json>& newMessage);
 

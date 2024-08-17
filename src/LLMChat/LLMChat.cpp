@@ -1,13 +1,16 @@
 #include <utility>
 
+#include <QApplication>
+#include <QGraphicsOpacityEffect>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QLineEdit>
+#include <QPropertyAnimation>
 #include <QPushButton>
-#include <QTimer.h>
+#include <QTimer>
 #include <QVBoxLayout>
-#include <qboxlayout.h>
 
 #include "LLMChat.hpp"
-#include "chatItemWidget.hpp"
 #include "chatUtils.hpp"
 #include "commandManager.hpp"
 #include "commands.hpp"
@@ -15,7 +18,7 @@
 #include "openai.hpp"
 
 LLMChat::LLMChat(std::shared_ptr<dataModel> model, QWidget* parent)
-    : QDialog(parent), model_(std::move(model)), chatList_(new QListWidget(this))
+    : QDialog(parent), model_(std::move(model)), chatList_(new QListWidget(this)), popupLabel_(nullptr)
 {
     this->setWindowTitle("LLM Chat");
 
@@ -46,9 +49,11 @@ LLMChat::LLMChat(std::shared_ptr<dataModel> model, QWidget* parent)
 
     lineEdit->setFocus();
 
-    QTimer::singleShot(
-        0,
-        [this]() { this->appendAssistantMessage(tr("Hello! I am a helpful assistant. How can I assist you today?")); });
+    QTimer::singleShot(0,
+                       [this]() {
+                           this->appendMessage(chatItemRole::ASSISTANT,
+                                               tr("Hello! I am a helpful assistant. How can I assist you today?"));
+                       });
 }
 
 void LLMChat::resizeEvent(QResizeEvent* event)
@@ -73,13 +78,23 @@ void LLMChat::updateListItemSizes()
     }
 }
 
-void LLMChat::appendUserMessage(const QString& message)
+void LLMChat::appendMessage(const chatItemRole& role, const QString& message)
 {
+    auto item = new QListWidgetItem();
+
     const auto trimmedMessage = message.trimmed();
     auto widget = new chatItemWidget();
-    widget->setMessage(trimmedMessage, chatItemRole::USER);
 
-    auto item = new QListWidgetItem();
+    if (role == chatItemRole::USER)
+    {
+        widget->setMessage(trimmedMessage, chatItemRole::USER);
+    }
+    else
+    {
+        widget->setMessage(trimmedMessage, chatItemRole::ASSISTANT);
+        item->setBackground(QColor(199, 252, 255));
+    }
+
     item->setSizeHint(widget->size());
 
     chatList_->addItem(item);
@@ -88,24 +103,47 @@ void LLMChat::appendUserMessage(const QString& message)
     chatList_->scrollToBottom();
 
     this->updateListItemSizes();
+
+    QApplication::processEvents();
 }
 
-void LLMChat::appendAssistantMessage(const QString& message)
+void LLMChat::showPopupMessage(const QString& message)
 {
-    const auto trimmedMessage = message.trimmed();
-    auto widget = new chatItemWidget();
-    widget->setMessage(trimmedMessage, chatItemRole::ASSISTANT);
+    popupLabel_ = new QLabel(message, chatList_);
+    popupLabel_->setStyleSheet("QLabel { background-color : yellow; color : black; padding: 5px; }");
+    popupLabel_->setAlignment(Qt::AlignLeft);
 
-    auto item = new QListWidgetItem();
-    item->setSizeHint(widget->size());
-    item->setBackground(QColor(199, 252, 255));
+    const int x = 0;
+    const int y = chatList_->height() - popupLabel_->height();
 
-    chatList_->addItem(item);
-    chatList_->setItemWidget(item, widget);
+    popupLabel_->setGeometry(x, y, chatList_->width(), popupLabel_->height());
 
-    chatList_->scrollToBottom();
+    auto effect = new QGraphicsOpacityEffect(popupLabel_);
+    popupLabel_->setGraphicsEffect(effect);
 
-    this->updateListItemSizes();
+    popupLabel_->show();
+
+    QTimer::singleShot(1500,
+                       [=]()
+                       {
+                           auto fadeOut = new QPropertyAnimation(effect, "opacity");
+                           fadeOut->setDuration(500);  // Fade-out duration: 500ms
+                           fadeOut->setStartValue(1);
+                           fadeOut->setEndValue(0);
+
+                           QObject::connect(fadeOut, &QPropertyAnimation::finished, popupLabel_,
+                                            [this]()
+                                            {
+                                                popupLabel_->deleteLater();
+                                                popupLabel_ = nullptr;
+                                            });
+
+                           fadeOut->start(QPropertyAnimation::DeleteWhenStopped);
+                       });
+
+    QEventLoop loop;
+    QObject::connect(popupLabel_, &QLabel::destroyed, &loop, &QEventLoop::quit);
+    loop.exec();  // Block the main thread until the popupLabel is destroyed
 }
 
 [[nodiscard]] nlohmann::json LLMChat::generatePayload(const std::vector<nlohmann::json>& newMessages)
@@ -195,6 +233,8 @@ nlohmann::json LLMChat::processResponse(const nlohmann::json& response)
             const auto toolName = toolCall.at("function").at("name");
             if (toolName == "clear_all_orders")
             {
+                this->showPopupMessage(tr("Clearing all orders..."));
+
                 auto command = new clearAllOrdersCommand(model_);
                 auto cmdManager = commandManager::getInstance();
                 cmdManager->runCommand(command);
@@ -211,6 +251,8 @@ nlohmann::json LLMChat::processResponse(const nlohmann::json& response)
             }
             else if (toolName == "show_all_orders")
             {
+                this->showPopupMessage(tr("Querying orders information..."));
+
                 const auto data = getAllOrdersInfo(model_);
 
                 auto toolResultMessage = R"({
@@ -231,7 +273,7 @@ nlohmann::json LLMChat::processResponse(const nlohmann::json& response)
     else if (choice.at("finish_reason") == "stop")
     {
         const auto& assistantMessage = choice.at("message").at("content");
-        this->appendAssistantMessage(QString::fromStdString(assistantMessage));
+        this->appendMessage(chatItemRole::ASSISTANT, QString::fromStdString(assistantMessage));
 
         return {};
     }
@@ -241,7 +283,7 @@ nlohmann::json LLMChat::processResponse(const nlohmann::json& response)
 
 void LLMChat::onSendMessageClicked(const QString& message)
 {
-    this->appendUserMessage(message);
+    this->appendMessage(chatItemRole::USER, message);
 
     auto userMessage = nlohmann::json::object();
     userMessage["role"] = "user";
