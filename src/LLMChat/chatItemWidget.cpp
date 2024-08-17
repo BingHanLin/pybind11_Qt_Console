@@ -1,3 +1,4 @@
+#include <QIcon>
 #include <QTime>
 
 #include "chatItemWidget.hpp"
@@ -6,6 +7,7 @@
 chatItemWidget::chatItemWidget(QWidget* parent) : QWidget(parent), ui(new Ui::chatItemWidget)
 {
     ui->setupUi(this);
+    ui->messageLabel->setWordWrap(true);
 }
 
 chatItemWidget::~chatItemWidget()
@@ -17,16 +19,28 @@ void chatItemWidget::setMessage(const QString& message, const chatItemRole& role
 {
     if (chatItemRole::ASSISTANT == role)
     {
-        ui->lblMessage->setAlignment(Qt::AlignLeft);
-        ui->lblMessage->setAlignment(Qt::AlignLeft);
-        ui->lblMessage->setText(QString(tr("AI\n%1").arg(message)));
+        ui->timeLabel->setAlignment(Qt::AlignLeft);
+        ui->messageLabel->setAlignment(Qt::AlignLeft);
+        ui->avatorLabel->setAlignment(Qt::AlignLeft);
+
+        QPixmap pixmap(":/icons/ai");  // Load your image
+        ui->avatorLabel->setPixmap(pixmap.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+
+        // Set background color
+        // this->setStyleSheet("chatItemWidget{background-color: rgb(199, 252, 255);}");
     }
     else if (chatItemRole::USER == role)
     {
-        ui->lblMessage->setAlignment(Qt::AlignRight);
-        ui->lblMessage->setAlignment(Qt::AlignRight);
-        ui->lblMessage->setText(QString(tr("You\n%1").arg(message)));
+        ui->timeLabel->setAlignment(Qt::AlignRight);
+        ui->messageLabel->setAlignment(Qt::AlignRight);
+        ui->avatorLabel->setAlignment(Qt::AlignRight);
+
+        QPixmap pixmap(":/icons/user");  // Load your image
+        ui->avatorLabel->setPixmap(pixmap.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
 
-    ui->lblTime->setText(QTime::currentTime().toString("HH:mm"));
+    ui->messageLabel->setText(message);
+    ui->timeLabel->setText(QTime::currentTime().toString("HH:mm"));
+
+    this->adjustSize();
 }

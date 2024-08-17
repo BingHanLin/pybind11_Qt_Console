@@ -1,5 +1,6 @@
 #include <QDialog>
 #include <QListWidget>
+#include <vector>
 
 #include "dataModel.hpp"
 #include "nlohmann/json.hpp"
@@ -14,11 +15,14 @@ class LLMChat : public QDialog
   private:
     std::shared_ptr<dataModel> model_;
     QListWidget* chatList_;
-
-    void processResponse(const nlohmann::json& response);
+    std::vector<nlohmann::json> messageHistory_;
 
     void appendUserMessage(const QString& message);
     void appendAssistantMessage(const QString& message);
+
+    [[nodiscard]] nlohmann::json generatePayload(const std::vector<nlohmann::json>& newMessage);
+
+    nlohmann::json processResponse(const nlohmann::json& response);
 
   private slots:
     void onSendMessageClicked(const QString& inputMessage);

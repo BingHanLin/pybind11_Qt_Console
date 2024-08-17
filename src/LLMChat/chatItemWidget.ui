@@ -6,23 +6,30 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>380</width>
-    <height>73</height>
+    <width>377</width>
+    <height>99</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0">
    <item>
-    <widget class="QLabel" name="lblMessage">
+    <widget class="QLabel" name="avatorLabel">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="messageLabel">
      <property name="text">
       <string>TextLabel</string>
      </property>
     </widget>
    </item>
-   <item alignment="Qt::AlignRight">
-    <widget class="QLabel" name="lblTime">
+   <item>
+    <widget class="QLabel" name="timeLabel">
      <property name="text">
       <string>TextLabel</string>
      </property>

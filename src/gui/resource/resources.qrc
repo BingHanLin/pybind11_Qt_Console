@@ -4,6 +4,8 @@
     <qresource prefix="/icons">
         <file alias="redo">icons/redo.png</file>
         <file alias="undo">icons/undo.png</file>
+        <file alias="ai">icons/ai.png</file>
+        <file alias="user">icons/user.png</file>
     </qresource>
 
 </RCC>
