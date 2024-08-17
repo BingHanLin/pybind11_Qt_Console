@@ -182,6 +182,56 @@ void LLMChat::showPopupMessage(const QString& message)
         }
         })"_json);
 
+        toolsJSON.push_back(R"({
+        "type": "function",
+        "function": {
+            "name": "add_order",
+            "description": "Add an order under the specified group. The following properties should be provided by user: group, name, price, amount.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "description": "The group to add the order to."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the order."
+                    },
+                    "price": {
+                        "type": "number",
+                        "description": "The price of the order."
+                    },
+                    "amount": {
+                        "type": "number",
+                        "description": "The amount of the order."
+                    }
+                }
+            }
+        }
+        })"_json);
+
+        toolsJSON.push_back(R"({
+        "type": "function",
+        "function": {
+            "name": "delete_order",
+            "description": "Delete an order from the specified group. The following properties should be provided by user: group, name.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "group": {
+                        "type": "string",
+                        "description": "The group to add the order to."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the order."
+                    }
+                }
+            }
+        }
+        })"_json);
+
         paylod["tools"] = toolsJSON;
     }
 
@@ -235,17 +285,24 @@ nlohmann::json LLMChat::processResponse(const nlohmann::json& response)
             {
                 this->showPopupMessage(tr("Clearing all orders..."));
 
-                auto command = new clearAllOrdersCommand(model_);
-                auto cmdManager = commandManager::getInstance();
-                cmdManager->runCommand(command);
+                const auto result = clearAllOrders(model_);
 
                 auto toolResultMessage = R"({
                     "role": "tool",
-                    "content": "All orders have been cleared.",
+                    "content": "",
                     "tool_call_id": 0
                 })"_json;
 
                 toolResultMessage["tool_call_id"] = toolCall.at("id");
+
+                if (result)
+                {
+                    toolResultMessage.at("content") = "All orders have been cleared.";
+                }
+                else
+                {
+                    toolResultMessage.at("content") = "Failed to clear all orders.";
+                }
 
                 newMessages.push_back(toolResultMessage);
             }
@@ -263,6 +320,70 @@ nlohmann::json LLMChat::processResponse(const nlohmann::json& response)
 
                 toolResultMessage["content"] = data.dump(4);
                 toolResultMessage["tool_call_id"] = toolCall.at("id");
+
+                newMessages.push_back(toolResultMessage);
+            }
+            else if (toolName == "delete_order")
+            {
+                this->showPopupMessage(tr("Deleting order..."));
+
+                const auto arguments =
+                    nlohmann::json::parse(toolCall.at("function").at("arguments").get<std::string>());
+
+                const auto groupName = arguments.at("group").get<std::string>();
+                const auto orderName = arguments.at("name").get<std::string>();
+
+                const auto result = deleteOrder(model_, groupName, orderName);
+
+                auto toolResultMessage = R"({
+                    "role": "tool",
+                    "content": "",
+                    "tool_call_id": 0
+                })"_json;
+
+                toolResultMessage["tool_call_id"] = toolCall.at("id");
+
+                if (result)
+                {
+                    toolResultMessage.at("content") = "Order has been deleted.";
+                }
+                else
+                {
+                    toolResultMessage.at("content") = "Failed to delete order.";
+                }
+
+                newMessages.push_back(toolResultMessage);
+            }
+            else if (toolName == "add_order")
+            {
+                this->showPopupMessage(tr("Adding order..."));
+
+                const auto arguments =
+                    nlohmann::json::parse(toolCall.at("function").at("arguments").get<std::string>());
+
+                const auto groupName = arguments.at("group").get<std::string>();
+                const auto orderName = arguments.at("name").get<std::string>();
+                const auto price = arguments.at("price").get<double>();
+                const auto amount = arguments.at("amount").get<int>();
+
+                const auto result = addOrder(model_, groupName, orderName, price, amount);
+
+                auto toolResultMessage = R"({
+                    "role": "tool",
+                    "content": "",
+                    "tool_call_id": 0
+                })"_json;
+
+                toolResultMessage["tool_call_id"] = toolCall.at("id");
+
+                if (result)
+                {
+                    toolResultMessage.at("content") = "Order has been added.";
+                }
+                else
+                {
+                    toolResultMessage.at("content") = "Failed to add order.";
+                }
 
                 newMessages.push_back(toolResultMessage);
             }
