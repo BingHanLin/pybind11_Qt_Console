@@ -9,9 +9,11 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QTextBrowser>
+#include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <memory>
+#include <qdatetime.h>
 #include <qlineedit.h>
 #include <qnamespace.h>
 #include <qvariant.h>
@@ -30,7 +32,12 @@ Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
 Q_DECLARE_METATYPE(std::shared_ptr<group>)
 Q_DECLARE_METATYPE(std::shared_ptr<order>)
 
-mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
+mainWindow::mainWindow(QWidget* parent)
+    : QMainWindow(parent),
+      model_(nullptr),
+      tree_(nullptr),
+      pyConsoleDockWidget_(nullptr),
+      recordingBrowserWidget_(nullptr)
 {
     this->setWindowTitle(tr("pybind11 Qt Console"));
 
@@ -226,9 +233,9 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
         connect(model_.get(), &dataModel::messageEmerged, console, &pythonConsole::onMessagePassedIn);
 
         {
-            auto dockWidget = new QDockWidget(tr("Python Console"), this);
-            dockWidget->setWidget(console);
-            this->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
+            pyConsoleDockWidget_ = new QDockWidget(tr("Python Console"), this);
+            pyConsoleDockWidget_->setWidget(console);
+            this->addDockWidget(Qt::BottomDockWidgetArea, pyConsoleDockWidget_);
         }
 
         auto recordWidget = new QWidget(this);
@@ -272,15 +279,24 @@ mainWindow::mainWindow(QWidget* parent) : QMainWindow(parent)
                 [recordingBrowser]() { recordingBrowser->append(tr("# === Recording Stopped ===")); });
 
         {
-            auto dockWidget = new QDockWidget(tr("Recording Browser"), this);
-            dockWidget->setWidget(recordWidget);
-            this->addDockWidget(Qt::RightDockWidgetArea, dockWidget);
+            recordingBrowserWidget_ = new QDockWidget(tr("Recording Browser"), this);
+            recordingBrowserWidget_->setWidget(recordWidget);
+            this->addDockWidget(Qt::RightDockWidgetArea, recordingBrowserWidget_);
         }
     }
 
     connect(model_.get(), &dataModel::dataChanged, this, &mainWindow::onDataChanged);
 
     this->onDataChanged();
+
+    QTimer::singleShot(0, this, &mainWindow::setDefaultLayout);
+}
+
+void mainWindow::setDefaultLayout()
+{
+    const auto h1 = int(this->height() / 10.0 * 8.0);
+    const auto h2 = int(this->height() / 10.0 * 2.0);
+    this->resizeDocks({recordingBrowserWidget_, pyConsoleDockWidget_}, {h1, h2}, Qt::Vertical);
 }
 
 void mainWindow::onDataChanged()
