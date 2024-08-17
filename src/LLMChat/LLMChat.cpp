@@ -85,6 +85,8 @@ void LLMChat::appendUserMessage(const QString& message)
     chatList_->addItem(item);
     chatList_->setItemWidget(item, widget);
 
+    chatList_->scrollToBottom();
+
     this->updateListItemSizes();
 }
 
@@ -100,6 +102,8 @@ void LLMChat::appendAssistantMessage(const QString& message)
 
     chatList_->addItem(item);
     chatList_->setItemWidget(item, widget);
+
+    chatList_->scrollToBottom();
 
     this->updateListItemSizes();
 }

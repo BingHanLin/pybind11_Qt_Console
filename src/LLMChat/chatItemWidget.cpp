@@ -25,7 +25,7 @@ void chatItemWidget::setMessage(const QString& message, const chatItemRole& role
         ui->avatorLabel->setAlignment(Qt::AlignLeft);
 
         QPixmap pixmap(":/icons/ai");  // Load your image
-        ui->avatorLabel->setPixmap(pixmap.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        ui->avatorLabel->setPixmap(pixmap.scaled(24, 24, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
         // Set background color
         // this->setStyleSheet("chatItemWidget{background-color: rgb(199, 252, 255);}");
@@ -37,7 +37,7 @@ void chatItemWidget::setMessage(const QString& message, const chatItemRole& role
         ui->avatorLabel->setAlignment(Qt::AlignRight);
 
         QPixmap pixmap(":/icons/user");  // Load your image
-        ui->avatorLabel->setPixmap(pixmap.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        ui->avatorLabel->setPixmap(pixmap.scaled(24, 242, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
 
     ui->messageLabel->setText(message);
