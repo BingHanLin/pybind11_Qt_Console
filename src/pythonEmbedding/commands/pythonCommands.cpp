@@ -65,14 +65,12 @@ PYBIND11_EMBEDDED_MODULE(root_module, root_var)
 
     order_commands.def(
         "add_order",
-        [](const std::shared_ptr<group>& oneGroup, int amount, double price) -> std::shared_ptr<object>
+        [](const std::shared_ptr<group>& oneGroup, int amount, double price) -> std::shared_ptr<order>
         {
             if (pythonCommands::model_ != nullptr)
             {
                 auto newOrder = std::make_shared<order>("New Order", amount, price, oneGroup.get());
-
                 auto command = new addOrderCommand(pythonCommands::model_, oneGroup, newOrder);
-
                 auto cmdManager = commandManager::getInstance();
                 cmdManager->runCommand(command);
 
