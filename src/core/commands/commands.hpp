@@ -27,7 +27,8 @@ class baseCommand : public QUndoCommand
 class addOrderCommand : public baseCommand
 {
   public:
-    using scriptCallbackType = std::function<std::string(const std::shared_ptr<group> &, int, double)>;
+    using scriptCallbackType =
+        std::function<std::string(const std::shared_ptr<order> &, const std::shared_ptr<group> &, int, double)>;
     static void setScriptCallback(scriptCallbackType callback)
     {
         scriptCallback_ = std::move(callback);
@@ -61,7 +62,7 @@ class addOrderCommand : public baseCommand
 
         if (isFirstTime_ && commandManager::getInstance()->isRecoring())
         {
-            const auto record = scriptCallback_(group_, newOrder_->amount_, newOrder_->price_);
+            const auto record = scriptCallback_(newOrder_, group_, newOrder_->amount_, newOrder_->price_);
             commandManager::getInstance()->insertRecording(QString::fromStdString(record));
 
             isFirstTime_ = false;

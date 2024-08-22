@@ -7,7 +7,7 @@
 #include <pybind11/embed.h>  // everything needed for embedding
 #pragma pop_macro("slots")
 
-#include "dataModel.hpp"
+class dataModel;
 
 class pythonCommands
 {

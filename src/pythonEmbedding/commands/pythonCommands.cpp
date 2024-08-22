@@ -3,6 +3,7 @@
 
 #include "commandManager.hpp"
 #include "commands.hpp"
+#include "dataModel.hpp"
 #include "object.hpp"
 #include "order.hpp"
 #include "pythonCommandUtil.hpp"
@@ -45,6 +46,7 @@ PYBIND11_EMBEDDED_MODULE(root_module, root_var)
             pybind11::return_value_policy::reference, "Get model root.");
     }
 
+    // https://pybind11.readthedocs.io/en/latest/classes.html#inheritance
     pybind11::class_<object, std::shared_ptr<object>>(root_var, "object")
         .def("__repr__", [](const object& o) { return "<object: name " + o.getName() + ">"; })
         .def(
@@ -83,14 +85,16 @@ PYBIND11_EMBEDDED_MODULE(root_module, root_var)
         pybind11::arg("amount"), pybind11::arg("price"));
 
     {
-        addOrderCommand::scriptCallbackType callback = [](const std::shared_ptr<group>& oneGroup, int amount,
+        addOrderCommand::scriptCallbackType callback = [](const std::shared_ptr<order>& addedOrder,
+                                                          const std::shared_ptr<group>& oneGroup, int amount,
                                                           double price) -> std::string
         {
             const auto groupScript = getObjectScript(oneGroup);
 
             std::ostringstream oss;
             oss << groupScript.findScript_ << "\n";
-            oss << "order_commands.add_order(" << groupScript.targetName_ << ", " << amount << ", " << price << ")";
+            oss << "new_order= order_commands.add_order(" << groupScript.targetName_ << ", " << amount << ", " << price
+                << ")";
             return oss.str();
         };
 

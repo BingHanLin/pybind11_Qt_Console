@@ -124,12 +124,6 @@ std::vector<std::string> pythonInterpreter::getPossibleMethods(const std::vector
 
 pythonInterpreter::pythonInterpreter(QObject* parent) : QObject(parent)
 {
-    pybind11::exec(R"(
-        kwargs = dict(name="World", number=42)
-        message = "Hello, {name}! The answer is {number}".format(**kwargs)
-        print(message)
-    )");
-
     auto root_module = pybind11::module_::import("root_module");
     locals_ = root_module.attr("__dict__");
 }
